@@ -1,10 +1,9 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { db } from '../db/index.js';
 import { meetings, transcriptions, aiNotes } from '../db/schema.js';
-// Re-enable transcription service for real OpenAI Whisper transcription
+// Enable both transcription and AI services for full functionality
 import { TranscriptionService } from '../services/transcription.js';
-// Keep AI service commented out for now - focusing on transcription only
-// import { AIService } from '../services/ai.js';
+import { AIService } from '../services/ai.js';
 import { eq, desc } from 'drizzle-orm';
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join } from 'path';
@@ -14,10 +13,9 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-// Initialize transcription service for real OpenAI Whisper transcription
+// Initialize both transcription and AI services for full functionality
 const transcriptionService = new TranscriptionService();
-// Keep AI service commented out for now - focusing on transcription only
-// const aiService = new AIService();
+const aiService = new AIService();
 
 export async function apiRoutes(fastify: FastifyInstance) {
   // Ensure uploads directory exists
@@ -207,22 +205,18 @@ async function processAudioFile(meetingId: number, filepath: string) {
       confidence: transcriptionResult.confidence || 0.85,
     });
 
-    // Add demo AI notes for now (keeping the AI analysis section functional)
+    // Generate real AI insights from the transcription
+    console.log(`Starting AI analysis for meeting ${meetingId}`);
+    const insights = await aiService.generateMeetingInsights(transcriptionResult.text);
+    console.log(`AI analysis completed for meeting ${meetingId}`);
+    
+    // Save real AI-generated insights
     await db.insert(aiNotes).values({
       meetingId,
-      summary: `Meeting transcription completed successfully. The audio has been processed and converted to text using OpenAI Whisper.`,
-      keyPoints: JSON.stringify([
-        "Audio successfully transcribed using OpenAI Whisper",
-        "Full transcription available in the transcription tab",
-        "Real-time processing completed"
-      ]),
-      actionItems: JSON.stringify([
-        "Review the full transcription",
-        "Extract key insights manually if needed"
-      ]),
-      participants: JSON.stringify([
-        "Participants identified from audio"
-      ]),
+      summary: insights.summary,
+      keyPoints: JSON.stringify(insights.keyPoints),
+      actionItems: JSON.stringify(insights.actionItems),
+      participants: JSON.stringify(insights.participants),
     });
 
     // Update status to completed
