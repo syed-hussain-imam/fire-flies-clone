@@ -7,7 +7,7 @@ export const meetings = sqliteTable('meetings', {
   description: text('description'),
   audioUrl: text('audio_url'),
   duration: real('duration'), // in seconds
-  status: text('status', { enum: ['uploading', 'transcribing', 'completed', 'failed'] })
+  status: text('status', { enum: ['uploading', 'transcribing', 'transcription_complete', 'completed', 'failed'] })
     .notNull()
     .default('uploading'),
   createdAt: text('created_at')

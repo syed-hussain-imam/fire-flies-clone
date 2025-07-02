@@ -205,6 +205,13 @@ async function processAudioFile(meetingId: number, filepath: string) {
       confidence: transcriptionResult.confidence || 0.85,
     });
 
+    // Update status to transcription_complete so frontend can show transcription
+    await db.update(meetings)
+      .set({ status: 'transcription_complete' })
+      .where(eq(meetings.id, meetingId));
+
+    console.log(`Transcription ready for display, starting AI analysis for meeting ${meetingId}`);
+
     // Generate real AI insights from the transcription
     console.log(`Starting AI analysis for meeting ${meetingId}`);
     const insights = await aiService.generateMeetingInsights(transcriptionResult.text);
@@ -219,7 +226,7 @@ async function processAudioFile(meetingId: number, filepath: string) {
       participants: JSON.stringify(insights.participants),
     });
 
-    // Update status to completed
+    // Update status to completed (now everything is ready)
     await db.update(meetings)
       .set({ status: 'completed' })
       .where(eq(meetings.id, meetingId));

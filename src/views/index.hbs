@@ -166,29 +166,58 @@
                     </button>
                 </div>
 
-                <!-- Tabs -->
+                <!-- Tabs with Real-time Loading -->
                 <div class="w-full">
                     <div class="flex w-full bg-gray-100 rounded-2xl p-1 mb-8">
                         <button 
-                            @click="activeTab = 'transcription'"
-                            :class="activeTab === 'transcription' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'"
-                            class="flex-1 text-lg py-4 rounded-xl transition-colors"
+                            @click="transcriptionReady && (activeTab = 'transcription')"
+                            :disabled="!transcriptionReady"
+                            :class="[
+                                activeTab === 'transcription' ? 'bg-white shadow-sm' : 'hover:bg-gray-200',
+                                !transcriptionReady ? 'opacity-50 cursor-not-allowed' : '',
+                                transcriptionReady ? 'text-green-600' : ''
+                            ]"
+                            class="flex-1 text-lg py-4 rounded-xl transition-colors relative"
                         >
-                            Complete Transcription
+                            <span class="flex items-center justify-center gap-2">
+                                <span x-show="transcriptionReady" class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                <span x-show="!transcriptionReady" class="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
+                                Complete Transcription
+                            </span>
                         </button>
                         <button 
-                            @click="activeTab = 'summary'"
-                            :class="activeTab === 'summary' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'"
-                            class="flex-1 text-lg py-4 rounded-xl transition-colors"
+                            @click="aiAnalysisReady && (activeTab = 'summary')"
+                            :disabled="!aiAnalysisReady"
+                            :class="[
+                                activeTab === 'summary' ? 'bg-white shadow-sm' : 'hover:bg-gray-200',
+                                !aiAnalysisReady ? 'opacity-50 cursor-not-allowed' : '',
+                                aiAnalysisReady ? 'text-green-600' : ''
+                            ]"
+                            class="flex-1 text-lg py-4 rounded-xl transition-colors relative"
                         >
-                            Summary
+                            <span class="flex items-center justify-center gap-2">
+                                <span x-show="aiAnalysisReady" class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                <span x-show="!aiAnalysisReady && transcriptionReady" class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
+                                <span x-show="!aiAnalysisReady && !transcriptionReady" class="w-2 h-2 bg-gray-400 rounded-full"></span>
+                                Summary
+                            </span>
                         </button>
                         <button 
-                            @click="activeTab = 'takeaways'"
-                            :class="activeTab === 'takeaways' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'"
-                            class="flex-1 text-lg py-4 rounded-xl transition-colors"
+                            @click="aiAnalysisReady && (activeTab = 'takeaways')"
+                            :disabled="!aiAnalysisReady"
+                            :class="[
+                                activeTab === 'takeaways' ? 'bg-white shadow-sm' : 'hover:bg-gray-200',
+                                !aiAnalysisReady ? 'opacity-50 cursor-not-allowed' : '',
+                                aiAnalysisReady ? 'text-green-600' : ''
+                            ]"
+                            class="flex-1 text-lg py-4 rounded-xl transition-colors relative"
                         >
-                            Key Takeaways
+                            <span class="flex items-center justify-center gap-2">
+                                <span x-show="aiAnalysisReady" class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                <span x-show="!aiAnalysisReady && transcriptionReady" class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
+                                <span x-show="!aiAnalysisReady && !transcriptionReady" class="w-2 h-2 bg-gray-400 rounded-full"></span>
+                                Key Takeaways
+                            </span>
                         </button>
                     </div>
 
@@ -267,6 +296,8 @@
                 transcriptionText: '',
                 summaryText: '',
                 keyTakeaways: [],
+                transcriptionReady: false,
+                aiAnalysisReady: false,
                 
                 async handleFileUpload(event) {
                     const file = event.target.files?.[0];
@@ -330,23 +361,43 @@
 
                         const data = await response.json();
                         
-                        // Check meeting status
+                        // Check meeting status for progressive loading
                         if (data.meeting.status === 'completed') {
-                            // Processing complete, show results
+                            // Everything complete, show full results
                             await this.loadMeetingResults();
+                        } else if (data.meeting.status === 'transcription_complete') {
+                            // Transcription ready, show partial results and keep polling for AI
+                            await this.loadPartialResults(data);
+                            setTimeout(() => this.pollForResults(), 2000); // Poll faster for AI completion
                         } else if (data.meeting.status === 'failed') {
                             // Processing failed
                             this.error = 'Processing failed. Please try uploading again.';
                             this.isProcessing = false;
                         } else {
-                            // Still processing (uploading, transcribing, etc.), poll again
-                            setTimeout(() => this.pollForResults(), 3000);
+                            // Still processing (uploading, transcribing), poll again
+                            setTimeout(() => this.pollForResults(), 2000); // Faster polling for better UX
                         }
                     } catch (error) {
                         console.error('Polling error:', error);
                         // Keep polling even if there's an error, might be temporary
-                        setTimeout(() => this.pollForResults(), 5000);
+                        setTimeout(() => this.pollForResults(), 3000);
                     }
+                },
+
+                async loadPartialResults(data) {
+                    // Show transcription immediately when available
+                    if (data.transcription) {
+                        this.transcriptionText = data.transcription.text;
+                    }
+                    
+                    // Show processing screen with transcription available
+                    this.isProcessing = false;
+                    this.showResults = true;
+                    this.transcriptionReady = true;
+                    this.aiAnalysisReady = false; // Still waiting for AI analysis
+                    
+                    // Set default tab to transcription since it's ready
+                    this.activeTab = 'transcription';
                 },
 
                 async loadMeetingResults() {
@@ -373,6 +424,8 @@
 
                         this.isProcessing = false;
                         this.showResults = true;
+                        this.transcriptionReady = true;
+                        this.aiAnalysisReady = true; // Everything is ready now
 
                     } catch (error) {
                         console.error('Load results error:', error);
@@ -380,6 +433,8 @@
                         this.loadDemoData();
                         this.isProcessing = false;
                         this.showResults = true;
+                        this.transcriptionReady = true;
+                        this.aiAnalysisReady = true;
                     }
                 },
 
@@ -419,6 +474,8 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                     this.transcriptionText = '';
                     this.summaryText = '';
                     this.keyTakeaways = [];
+                    this.transcriptionReady = false;
+                    this.aiAnalysisReady = false;
                     
                     // Reset file input
                     const fileInput = document.getElementById('file-upload');
