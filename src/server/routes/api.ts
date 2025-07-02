@@ -1,8 +1,9 @@
 import { FastifyInstance, FastifyRequest, FastifyReply } from 'fastify';
 import { db } from '../db/index.js';
 import { meetings, transcriptions, aiNotes } from '../db/schema.js';
-import { TranscriptionService } from '../services/transcription.js';
-import { AIService } from '../services/ai.js';
+// Services commented out for demo
+// import { TranscriptionService } from '../services/transcription.js';
+// import { AIService } from '../services/ai.js';
 import { eq, desc } from 'drizzle-orm';
 import { writeFileSync, mkdirSync, existsSync } from 'fs';
 import { join } from 'path';
@@ -12,8 +13,9 @@ import { dirname } from 'path';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
-const transcriptionService = new TranscriptionService();
-const aiService = new AIService();
+// Services commented out for demo (no AI processing)
+// const transcriptionService = new TranscriptionService();
+// const aiService = new AIService();
 
 export async function apiRoutes(fastify: FastifyInstance) {
   // Ensure uploads directory exists
@@ -33,7 +35,13 @@ export async function apiRoutes(fastify: FastifyInstance) {
       // Save file
       const filename = `${Date.now()}-${data.filename}`;
       const filepath = join(uploadsDir, filename);
-      const buffer = await data.file.toBuffer();
+      
+      // Convert stream to buffer
+      const chunks: Buffer[] = [];
+      for await (const chunk of data.file) {
+        chunks.push(chunk);
+      }
+      const buffer = Buffer.concat(chunks);
       writeFileSync(filepath, buffer);
 
       // Create meeting record
@@ -43,8 +51,19 @@ export async function apiRoutes(fastify: FastifyInstance) {
         status: 'uploading'
       }).returning();
 
-      // Start background processing
-      processAudioFile(meeting.id, filepath);
+      // Start background processing (commented out for now)
+      // processAudioFile(meeting.id, filepath);
+      
+      // For demo purposes, add demo data and mark as completed
+      setTimeout(async () => {
+        // Add demo transcription and AI notes
+        await addDemoData(meeting.id);
+        
+        // Mark as completed
+        await db.update(meetings)
+          .set({ status: 'completed' })
+          .where(eq(meetings.id, meeting.id));
+      }, 3000); // 3 second delay to simulate processing
 
       return reply.send({ 
         message: 'File uploaded successfully', 
@@ -93,9 +112,10 @@ export async function apiRoutes(fastify: FastifyInstance) {
   });
 
   // Get meeting details
-  fastify.get('/api/meetings/:id', async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+  fastify.get('/api/meetings/:id', async (request: FastifyRequest<{ Params: { id: string }, Querystring: { format?: string } }>, reply: FastifyReply) => {
     try {
       const meetingId = parseInt(request.params.id);
+      const format = request.query.format;
       
       const [meeting] = await db.select().from(meetings).where(eq(meetings.id, meetingId));
       if (!meeting) {
@@ -105,6 +125,17 @@ export async function apiRoutes(fastify: FastifyInstance) {
       const [transcription] = await db.select().from(transcriptions).where(eq(transcriptions.meetingId, meetingId));
       const [notes] = await db.select().from(aiNotes).where(eq(aiNotes.meetingId, meetingId));
 
+      // Return JSON if requested
+      if (format === 'json') {
+        return reply.send({
+          meeting,
+          transcription,
+          aiNotes: notes,
+          status: meeting.status
+        });
+      }
+
+      // Return HTML for display
       const detailsHtml = `
         <div class="space-y-6">
           <div>
@@ -162,7 +193,8 @@ export async function apiRoutes(fastify: FastifyInstance) {
   });
 }
 
-// Background processing function
+// Background processing function (commented out for demo)
+/*
 async function processAudioFile(meetingId: number, filepath: string) {
   try {
     // Update status to transcribing
@@ -205,5 +237,56 @@ async function processAudioFile(meetingId: number, filepath: string) {
     await db.update(meetings)
       .set({ status: 'failed' })
       .where(eq(meetings.id, meetingId));
+  }
+}
+*/
+
+// Demo processing function (for testing upload without AI services)
+async function addDemoData(meetingId: number) {
+  try {
+    // Add demo transcription
+    await db.insert(transcriptions).values({
+      meetingId,
+      text: `Speaker 1: Good morning everyone, thank you for joining today's quarterly review meeting. Let's start by going over our key performance indicators for Q3.
+
+Speaker 2: Thanks for having me. I'd like to begin with our sales figures. We've seen a 15% increase compared to last quarter, which puts us ahead of our projected targets.
+
+Speaker 1: That's excellent news. What about our customer satisfaction scores?
+
+Speaker 3: Our NPS score has improved from 7.2 to 8.1, which is a significant improvement. The main feedback we're getting is that customers appreciate our faster response times.
+
+Speaker 2: Speaking of response times, we've reduced our average ticket resolution time from 24 hours to 16 hours.
+
+Speaker 1: Great progress. Let's discuss our action items for Q4. We need to focus on expanding our market reach and improving our product features based on customer feedback.`,
+      language: 'en',
+      confidence: 0.95,
+    });
+
+    // Add demo AI notes
+    await db.insert(aiNotes).values({
+      meetingId,
+      summary: `This quarterly review meeting covered Q3 performance metrics and Q4 planning. Key highlights include a 15% sales increase exceeding targets, improved customer satisfaction with NPS rising from 7.2 to 8.1, and reduced ticket resolution time from 24 to 16 hours. The team discussed focusing on market expansion and product feature improvements for Q4 based on customer feedback.`,
+      keyPoints: JSON.stringify([
+        "Sales increased by 15% in Q3, exceeding projected targets",
+        "Customer satisfaction improved significantly (NPS: 7.2 → 8.1)",
+        "Average ticket resolution time reduced from 24 to 16 hours",
+        "Customers appreciate faster response times",
+        "Q4 focus areas: market expansion and product feature improvements",
+        "Action items based on customer feedback to be prioritized"
+      ]),
+      actionItems: JSON.stringify([
+        "Expand market reach for Q4",
+        "Improve product features based on customer feedback",
+        "Continue reducing response times",
+        "Monitor NPS scores monthly"
+      ]),
+      participants: JSON.stringify([
+        "Project Manager",
+        "Sales Lead", 
+        "Customer Success Manager"
+      ]),
+    });
+  } catch (error) {
+    console.error('Demo data error:', error);
   }
 } 
