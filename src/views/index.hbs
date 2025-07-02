@@ -13,19 +13,11 @@
     <!-- Header -->
     <header class="border-b bg-white">
         <div class="container mx-auto px-4 py-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-2">
-                    <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                    </svg>
-                    <span class="text-xl font-bold">MeetingAI</span>
-                </div>
-                <nav class="hidden md:flex items-center space-x-6">
-                    <a href="#" class="text-gray-600 hover:text-gray-900">Features</a>
-                    <a href="#" class="text-gray-600 hover:text-gray-900">Pricing</a>
-                    <a href="#" class="text-gray-600 hover:text-gray-900">Help</a>
-                    <button class="btn btn-secondary">Sign In</button>
-                </nav>
+            <div class="flex items-center space-x-2">
+                <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                <span class="text-xl font-bold">MeetingAI</span>
             </div>
         </div>
     </header>
@@ -46,7 +38,7 @@
                 advanced AI.
             </p>
 
-            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+            <div class="flex justify-center mb-16">
                 <div class="relative">
                     <input
                         type="file"
@@ -64,9 +56,6 @@
                         </div>
                     </label>
                 </div>
-                <button class="btn btn-secondary px-8 py-4 text-lg" @click="showDemo()">
-                    Try Demo
-                </button>
             </div>
 
             <div class="text-sm text-gray-500">Supports MP3, WAV, MP4, and other common audio/video formats</div>
@@ -224,16 +213,6 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                     // Reset file input
                     const fileInput = document.getElementById('file-upload');
                     if (fileInput) fileInput.value = '';
-                },
-                
-                showDemo() {
-                    this.uploadedFileName = 'demo-meeting.mp3';
-                    this.isProcessing = true;
-                    
-                    setTimeout(() => {
-                        this.isProcessing = false;
-                        this.showResults = true;
-                    }, 2000);
                 }
             }
         }
