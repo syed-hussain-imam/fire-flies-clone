@@ -1,0 +1,67 @@
+version: '3.8'
+
+services:
+  fireflies-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fireflies-clone
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_URL=./sqlite.db
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MAX_FILE_SIZE=50MB
+      - UPLOAD_DIR=./uploads
+    volumes:
+      # Persist database and uploads
+      - fireflies_data:/app/sqlite.db
+      - fireflies_uploads:/app/uploads
+      - fireflies_logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Development service with hot reload
+  fireflies-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: fireflies-clone-dev
+    ports:
+      - "3000:3000"
+      - "9229:9229"  # Debug port
+    environment:
+      - NODE_ENV=development
+      - PORT=3000
+      - DATABASE_URL=./sqlite.db
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - MAX_FILE_SIZE=50MB
+      - UPLOAD_DIR=./uploads
+    volumes:
+      # Mount source code for hot reload
+      - .:/app
+      - /app/node_modules
+      - fireflies_dev_uploads:/app/uploads
+      - fireflies_dev_logs:/app/logs
+    profiles:
+      - dev
+    command: npm run dev
+
+volumes:
+  fireflies_data:
+    driver: local
+  fireflies_uploads:
+    driver: local
+  fireflies_logs:
+    driver: local
+  fireflies_dev_uploads:
+    driver: local
+  fireflies_dev_logs:
+    driver: local 

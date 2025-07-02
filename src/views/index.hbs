@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MeetingAI - {{title}}</title>
+    <meta name="description" content="{{description}}">
+    <link rel="stylesheet" href="/static/css/output.css">
+    <script src="https://unpkg.com/htmx.org@1.9.8"></script>
+    <script src="https://unpkg.com/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
+</head>
+<body class="min-h-screen bg-gradient-to-b from-gray-50 to-white" x-data="meetingApp()">
+    <!-- Header -->
+    <header class="border-b bg-white">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <svg class="h-8 w-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                    <span class="text-xl font-bold">MeetingAI</span>
+                </div>
+                <nav class="hidden md:flex items-center space-x-6">
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Features</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Pricing</a>
+                    <a href="#" class="text-gray-600 hover:text-gray-900">Help</a>
+                    <button class="btn btn-secondary">Sign In</button>
+                </nav>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-12">
+        <!-- Initial Upload Screen -->
+        <div x-show="!showResults && !isProcessing" class="max-w-4xl mx-auto text-center">
+            <h1 class="text-5xl md:text-7xl font-bold text-gray-900 mb-6 leading-tight">
+                TRANSCRIBE YOUR
+                <br />
+                MEETINGS WITH
+                <br />
+                <span class="text-green-600">AI PRECISION</span>
+            </h1>
+
+            <p class="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
+                Upload your meeting recordings and get instant transcriptions, summaries, and key takeaways powered by
+                advanced AI.
+            </p>
+
+            <div class="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+                <div class="relative">
+                    <input
+                        type="file"
+                        accept="audio/*,video/*"
+                        @change="handleFileUpload"
+                        class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                        id="file-upload"
+                    />
+                    <label for="file-upload" class="cursor-pointer">
+                        <div class="bg-green-600 hover:bg-green-700 text-white px-8 py-4 text-lg rounded-lg flex items-center gap-2 transition-colors">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                            </svg>
+                            Upload Recording
+                        </div>
+                    </label>
+                </div>
+                <button class="btn btn-secondary px-8 py-4 text-lg" @click="showDemo()">
+                    Try Demo
+                </button>
+            </div>
+
+            <div class="text-sm text-gray-500">Supports MP3, WAV, MP4, and other common audio/video formats</div>
+        </div>
+
+        <!-- Processing Screen -->
+        <div x-show="isProcessing" class="max-w-2xl mx-auto text-center">
+            <div class="bg-white rounded-lg shadow-lg p-12">
+                <svg class="h-12 w-12 animate-spin text-green-600 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                <h2 class="text-2xl font-semibold mb-4">Processing Your Recording</h2>
+                <p class="text-gray-600 mb-4">
+                    Analyzing: <span class="font-medium" x-text="uploadedFileName"></span>
+                </p>
+                <div class="w-full bg-gray-200 rounded-full h-2">
+                    <div class="bg-green-600 h-2 rounded-full animate-pulse" style="width: 60%"></div>
+                </div>
+                <p class="text-sm text-gray-500 mt-4">
+                    This usually takes 1-3 minutes depending on the length of your recording
+                </p>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div x-show="showResults" class="max-w-6xl mx-auto">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h1 class="text-3xl font-bold text-gray-900 mb-2">Meeting Analysis Complete</h1>
+                    <p class="text-gray-600">File: <span x-text="uploadedFileName"></span></p>
+                </div>
+                <button @click="handleReset()" class="btn btn-secondary">
+                    Upload New Recording
+                </button>
+            </div>
+
+            <!-- Tabs -->
+            <div class="w-full">
+                <div class="flex w-full bg-gray-100 rounded-lg p-1 mb-8">
+                    <button 
+                        @click="activeTab = 'transcription'"
+                        :class="activeTab === 'transcription' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'"
+                        class="flex-1 text-lg py-3 px-4 rounded-lg transition-colors"
+                    >
+                        Complete Transcription
+                    </button>
+                    <button 
+                        @click="activeTab = 'summary'"
+                        :class="activeTab === 'summary' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'"
+                        class="flex-1 text-lg py-3 px-4 rounded-lg transition-colors"
+                    >
+                        Summary
+                    </button>
+                    <button 
+                        @click="activeTab = 'takeaways'"
+                        :class="activeTab === 'takeaways' ? 'bg-white shadow-sm' : 'hover:bg-gray-200'"
+                        class="flex-1 text-lg py-3 px-4 rounded-lg transition-colors"
+                    >
+                        Key Takeaways
+                    </button>
+                </div>
+
+                <!-- Transcription Tab -->
+                <div x-show="activeTab === 'transcription'" class="bg-white rounded-lg shadow-md">
+                    <div class="p-6 border-b">
+                        <h3 class="text-xl font-semibold">Full Transcription</h3>
+                        <p class="text-gray-600 text-sm mt-1">Complete word-for-word transcription of your meeting</p>
+                    </div>
+                    <div class="p-6">
+                        <div class="bg-gray-50 p-6 rounded-lg font-mono text-sm leading-relaxed whitespace-pre-line" x-text="transcriptionText">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Summary Tab -->
+                <div x-show="activeTab === 'summary'" class="bg-white rounded-lg shadow-md">
+                    <div class="p-6 border-b">
+                        <h3 class="text-xl font-semibold">Meeting Summary</h3>
+                        <p class="text-gray-600 text-sm mt-1">AI-generated summary of the main discussion points</p>
+                    </div>
+                    <div class="p-6">
+                        <p class="text-gray-700 leading-relaxed text-lg" x-text="summaryText"></p>
+                    </div>
+                </div>
+
+                <!-- Takeaways Tab -->
+                <div x-show="activeTab === 'takeaways'" class="bg-white rounded-lg shadow-md">
+                    <div class="p-6 border-b">
+                        <h3 class="text-xl font-semibold">Key Takeaways</h3>
+                        <p class="text-gray-600 text-sm mt-1">Important points and action items from the meeting</p>
+                    </div>
+                    <div class="p-6">
+                        <ul class="space-y-4">
+                            <template x-for="(takeaway, index) in keyTakeaways" :key="index">
+                                <li class="flex items-start gap-3">
+                                    <div class="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
+                                    <span class="text-gray-700 leading-relaxed" x-text="takeaway"></span>
+                                </li>
+                            </template>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function meetingApp() {
+            return {
+                uploadedFileName: '',
+                isProcessing: false,
+                showResults: false,
+                activeTab: 'transcription',
+                transcriptionText: `Speaker 1: Good morning everyone, thank you for joining today's quarterly review meeting. Let's start by going over our key performance indicators for Q3.
+
+Speaker 2: Thanks for having me. I'd like to begin with our sales figures. We've seen a 15% increase compared to last quarter, which puts us ahead of our projected targets.
+
+Speaker 1: That's excellent news. What about our customer satisfaction scores?
+
+Speaker 3: Our NPS score has improved from 7.2 to 8.1, which is a significant improvement. The main feedback we're getting is that customers appreciate our faster response times.
+
+Speaker 2: Speaking of response times, we've reduced our average ticket resolution time from 24 hours to 16 hours.
+
+Speaker 1: Great progress. Let's discuss our action items for Q4. We need to focus on expanding our market reach and improving our product features based on customer feedback.`,
+                summaryText: `This quarterly review meeting covered Q3 performance metrics and Q4 planning. Key highlights include a 15% sales increase exceeding targets, improved customer satisfaction with NPS rising from 7.2 to 8.1, and reduced ticket resolution time from 24 to 16 hours. The team discussed focusing on market expansion and product feature improvements for Q4 based on customer feedback.`,
+                keyTakeaways: [
+                    "Sales increased by 15% in Q3, exceeding projected targets",
+                    "Customer satisfaction improved significantly (NPS: 7.2 → 8.1)",
+                    "Average ticket resolution time reduced from 24 to 16 hours",
+                    "Customers appreciate faster response times",
+                    "Q4 focus areas: market expansion and product feature improvements",
+                    "Action items based on customer feedback to be prioritized"
+                ],
+                
+                handleFileUpload(event) {
+                    const file = event.target.files?.[0];
+                    if (file) {
+                        this.uploadedFileName = file.name;
+                        this.isProcessing = true;
+                        
+                        // Simulate processing time
+                        setTimeout(() => {
+                            this.isProcessing = false;
+                            this.showResults = true;
+                        }, 3000);
+                    }
+                },
+                
+                handleReset() {
+                    this.uploadedFileName = '';
+                    this.showResults = false;
+                    this.isProcessing = false;
+                    this.activeTab = 'transcription';
+                    
+                    // Reset file input
+                    const fileInput = document.getElementById('file-upload');
+                    if (fileInput) fileInput.value = '';
+                },
+                
+                showDemo() {
+                    this.uploadedFileName = 'demo-meeting.mp3';
+                    this.isProcessing = true;
+                    
+                    setTimeout(() => {
+                        this.isProcessing = false;
+                        this.showResults = true;
+                    }, 2000);
+                }
+            }
+        }
+    </script>
+</body>
+</html> 

@@ -1,0 +1,67 @@
+import Fastify from 'fastify';
+import { fileURLToPath } from 'url';
+import { dirname, join } from 'path';
+import { apiRoutes } from './routes/api.js';
+import 'dotenv/config';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+
+const fastify = Fastify({
+  logger: {
+    level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',
+  },
+});
+
+// Register multipart support for file uploads
+await fastify.register(import('@fastify/multipart'), {
+  limits: {
+    fileSize: 50 * 1024 * 1024, // 50MB
+  },
+});
+
+// Register static files
+await fastify.register(import('@fastify/static'), {
+  root: join(__dirname, '../public'),
+  prefix: '/static/',
+});
+
+// Register view engine for HTML templates
+await fastify.register(import('@fastify/view'), {
+  engine: {
+    handlebars: await import('handlebars'),
+  },
+  root: join(__dirname, '../views'),
+});
+
+// Register API routes
+await fastify.register(apiRoutes);
+
+// Health check route
+fastify.get('/health', async (request, reply) => {
+  return { status: 'ok', timestamp: new Date().toISOString() };
+});
+
+// Main route
+fastify.get('/', async (request, reply) => {
+  return reply.view('index.hbs', {
+    title: 'Fireflies Clone',
+    description: 'AI-powered meeting transcription and note-taking'
+  });
+});
+
+// Start server
+const start = async () => {
+  try {
+    const port = Number(process.env.PORT) || 3000;
+    const host = '0.0.0.0'; // Always bind to 0.0.0.0 for Docker compatibility
+    
+    await fastify.listen({ port, host });
+    console.log(`🚀 Server running at http://${host}:${port}`);
+  } catch (err) {
+    fastify.log.error(err);
+    process.exit(1);
+  }
+};
+
+start(); 
