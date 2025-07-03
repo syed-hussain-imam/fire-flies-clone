@@ -664,8 +664,19 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                         // First, connect to WebSocket
                         await this.connectWebSocket();
                         
-                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                        const recorder = new MediaRecorder(stream);
+                        const stream = await navigator.mediaDevices.getUserMedia({ 
+                            audio: {
+                                sampleRate: 16000,
+                                channelCount: 1,
+                                echoCancellation: true,
+                                noiseSuppression: true
+                            }
+                        });
+                        
+                        // Use WebM format for better compatibility with whisper.cpp
+                        const recorder = new MediaRecorder(stream, {
+                            mimeType: 'audio/webm'
+                        });
                         
                         this.recordingChunks = [];
                         
@@ -684,7 +695,7 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                         };
                         
                         this.mediaRecorder = recorder;
-                        recorder.start(1000); // Record in 1-second chunks for real-time processing
+                        recorder.start(2000); // Record in 2-second chunks for better transcription quality
                         this.recordingState = 'recording';
                         
                         if (this.recordingTime === 0) {
@@ -865,6 +876,8 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                 },
 
                 handleWebSocketMessage(data) {
+                    console.log('Received WebSocket message:', data);
+                    
                     switch (data.type) {
                         case 'ready':
                             this.sessionId = data.sessionId;
@@ -872,6 +885,7 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                             break;
                         
                         case 'transcription':
+                            console.log('Received transcription:', data.data);
                             this.updateTranscription(data.data);
                             break;
                         
@@ -887,21 +901,26 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                             console.error('Server error:', data.message);
                             this.error = data.message;
                             break;
+                        
+                        default:
+                            console.warn('Unknown message type:', data.type);
                     }
                 },
 
                 updateTranscription(data) {
-                    // Update live transcription with new data
-                    this.liveTranscription = data.fullTranscript;
-                    this.transcriptionText = data.fullTranscript;
+                    // Use the complete transcript text (backend now sends complete text)
+                    const completeText = data.text || data.fullTranscript || '';
                     
-                    // For now, use simple summary generation based on transcription
-                    // In a real app, this would come from the server
-                    this.liveSummary = this.generateSimpleSummary(data.fullTranscript);
+                    // Replace the entire transcription content
+                    this.liveTranscription = completeText;
+                    this.transcriptionText = completeText;
+                    
+                    // Generate summaries based on complete transcript
+                    this.liveSummary = this.generateSimpleSummary(completeText);
                     this.summaryText = this.liveSummary;
                     
-                    // Generate simple key takeaways
-                    this.liveKeyTakeaways = this.generateSimpleKeyTakeaways(data.fullTranscript);
+                    // Generate key takeaways
+                    this.liveKeyTakeaways = this.generateSimpleKeyTakeaways(completeText);
                     this.keyTakeaways = this.liveKeyTakeaways;
                 },
 
@@ -928,11 +947,18 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                 },
 
                 sendAudioChunk(audioBlob) {
-                    if (!this.websocket || !this.isConnected) return;
+                    if (!this.websocket || !this.isConnected) {
+                        console.warn('WebSocket not connected, cannot send audio chunk');
+                        return;
+                    }
+                    
+                    console.log('Sending audio chunk:', audioBlob.size, 'bytes');
                     
                     const reader = new FileReader();
                     reader.onload = () => {
                         const base64Data = reader.result.split(',')[1];
+                        console.log('Sending base64 audio data:', base64Data.length, 'characters');
+                        
                         this.websocket.send(JSON.stringify({
                             type: 'audio_chunk',
                             data: base64Data

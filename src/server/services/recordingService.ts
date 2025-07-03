@@ -62,13 +62,16 @@ export class RecordingService {
 
         // Handle transcription events
         whisperService.on('transcription', (chunk: TranscriptionChunk) => {
-          session.fullTranscript += ' ' + chunk.text;
+          // Backend now sends complete transcript, so just use it directly
+          session.fullTranscript = chunk.text;
+          
+          console.log(`Sending transcription to session ${sessionId}:`, chunk.text);
           
           connection.send(JSON.stringify({
             type: 'transcription',
             data: {
               text: chunk.text,
-              fullTranscript: session.fullTranscript.trim(),
+              fullTranscript: chunk.text,
               timestamp: chunk.timestamp,
               confidence: chunk.confidence
             }
@@ -186,30 +189,50 @@ export class RecordingService {
   }
 
   private async processAudioChunk(session: RecordingSession, audioData: string): Promise<void> {
-    if (!session.isRecording) return;
+    if (!session.isRecording) {
+      console.log(`Session ${session.id} not recording, ignoring audio chunk`);
+      return;
+    }
     
     try {
+      // Validate base64 audio data
+      if (!audioData || typeof audioData !== 'string') {
+        console.warn(`Invalid audio data for session ${session.id}`);
+        return;
+      }
+      
       // Convert base64 audio data to buffer
       const audioBuffer = Buffer.from(audioData, 'base64');
+      console.log(`Received audio chunk for session ${session.id}: ${audioBuffer.length} bytes (base64 length: ${audioData.length})`);
+      
+      // Validate the converted buffer
+      if (!audioBuffer || audioBuffer.length === 0) {
+        console.warn(`Empty audio buffer for session ${session.id}, skipping`);
+        return;
+      }
+      
       session.audioChunks.push(audioBuffer);
       
-      // Process audio chunk every 3 seconds worth of data (approximate)
-      // This creates a balance between latency and accuracy
-      if (session.audioChunks.length >= 3) {
-        const combinedBuffer = Buffer.concat(session.audioChunks);
-        const chunkFilename = `${session.id}_chunk_${session.chunkCounter++}`;
-        
-        // Process the audio chunk with whisper
-        await session.whisperService.processAudioChunk(combinedBuffer, chunkFilename);
-        
-        // Clear processed chunks but keep some overlap for better continuity
-        session.audioChunks = session.audioChunks.slice(-1);
-      }
+      // Process each chunk immediately for better real-time response
+      // Instead of waiting for multiple chunks, process each one as it arrives
+      const chunkFilename = `${session.id}_chunk_${session.chunkCounter++}`;
+      
+      console.log(`Processing audio chunk: ${chunkFilename} (${audioBuffer.length} bytes)`);
+      
+      // Process the audio chunk with whisper (don't await to avoid blocking)
+      session.whisperService.processAudioChunk(audioBuffer, chunkFilename).catch(error => {
+        console.error(`Error processing audio chunk ${chunkFilename}:`, error);
+        session.connection.send(JSON.stringify({
+          type: 'error',
+          message: 'Failed to process audio chunk: ' + (error instanceof Error ? error.message : String(error))
+        }));
+      });
+      
     } catch (error) {
-      console.error('Error processing audio chunk:', error);
+      console.error(`Error processing audio chunk for session ${session.id}:`, error);
       session.connection.send(JSON.stringify({
         type: 'error',
-        message: 'Failed to process audio chunk'
+        message: 'Failed to process audio chunk: ' + (error instanceof Error ? error.message : String(error))
       }));
     }
   }

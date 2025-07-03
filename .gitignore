@@ -23,6 +23,7 @@ drizzle/
 
 # Runtime data
 uploads/
+temp/
 logs/
 *.log
 
