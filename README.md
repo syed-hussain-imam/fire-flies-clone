@@ -166,6 +166,7 @@ npm start
   - Participant recognition
 - **Modern UI**: Responsive design with htmx for dynamic interactions
 - **Fast Performance**: <200ms cold start, optimized for speed
+- **Language Optimization**: Currently optimized for English language processing.
 
 ## 🔧 Configuration
 
@@ -279,3 +280,20 @@ The application uses Fastify's built-in logger. In development, you'll see detai
 ## 📄 License
 
 ISC License - see LICENSE file for details.
+
+## 📝 Usage
+
+### Local Development & Testing
+
+After following the installation steps, you can run the application in development mode and test its functionalities:
+
+- `npm run dev` - Start development server with hot reload
+- `npm run css:watch` - Watch and rebuild CSS on changes
+- `npm run db:studio` - Open Drizzle Studio for database management
+
+To test the speaker diarization feature, you can use the provided sample audio file of an Anthropic interview with 3 people, located in the `data/` directory. Upload this file via the UI to see the diarization in action.
+
+### Production
+
+- `npm run build` - Build for production
+- `npm start` - Start production server
