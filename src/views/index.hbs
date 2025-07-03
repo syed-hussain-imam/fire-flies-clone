@@ -76,23 +76,147 @@
                         Transform conversations into actionable intelligence.
                     </p>
 
-                    <!-- Upload Button - Always Visible -->
-                    <div x-show="!isProcessing" class="relative inline-block">
-                        <input
-                            type="file"
-                            accept="audio/*,video/*"
-                            @change="handleFileUpload"
-                            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                            id="file-upload"
-                        />
-                        <label for="file-upload" class="cursor-pointer">
-                            <div class="bg-black hover:bg-gray-900 text-white px-8 py-4 text-lg rounded-full font-semibold flex items-center gap-2 transition-colors">
-                                <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
-                                </svg>
-                                Upload recording
+                    <!-- Recording Controls -->
+                    <div x-show="!isProcessing" class="max-w-2xl mx-auto space-y-8">
+                        <!-- Live Recording Section -->
+                        <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20">
+                            <div class="text-center">
+                                <!-- Live Recording Indicator -->
+                                <div x-show="recordingState === 'recording'" class="flex items-center justify-center gap-3 mb-6">
+                                    <div class="w-4 h-4 bg-red-500 rounded-full animate-pulse"></div>
+                                    <span class="text-white text-lg font-medium">LIVE RECORDING</span>
+                                </div>
+
+                                <!-- Timer Display -->
+                                <div class="mb-8">
+                                    <div class="text-6xl font-mono font-bold text-white mb-4" x-text="formatTime(recordingTime)"></div>
+                                    <div class="text-white/60 text-lg">
+                                        <span x-show="recordingState === 'idle'">Ready to record</span>
+                                        <span x-show="recordingState === 'recording'">Live transcribing...</span>
+                                        <span x-show="recordingState === 'paused'">Recording paused</span>
+                                        <span x-show="recordingState === 'stopped'">Recording complete</span>
+                                    </div>
+                                </div>
+
+                                <!-- Recording Controls -->
+                                <div class="flex items-center justify-center gap-6">
+                                    <!-- Idle State - Start Recording -->
+                                    <div x-show="recordingState === 'idle'" class="flex items-center justify-center">
+                                        <button
+                                            @click="handleStartRecording"
+                                            class="bg-red-600 hover:bg-red-700 text-white rounded-full w-20 h-20 p-0 shadow-2xl transition-colors flex items-center justify-center"
+                                        >
+                                            <svg class="h-8 w-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    <!-- Recording State - Pause, Stop, Restart -->
+                                    <div x-show="recordingState === 'recording'" class="flex items-center justify-center gap-4">
+                                        <button
+                                            @click="pauseRecording"
+                                            class="bg-yellow-600 hover:bg-yellow-700 text-white rounded-full w-16 h-16 p-0 transition-colors flex items-center justify-center"
+                                        >
+                                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 9v6m4-6v6"></path>
+                                            </svg>
+                                        </button>
+                                        <button
+                                            @click="stopRecording"
+                                            class="bg-red-600 hover:bg-red-700 text-white rounded-full w-16 h-16 p-0 transition-colors flex items-center justify-center"
+                                        >
+                                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6v4H9z"></path>
+                                            </svg>
+                                        </button>
+                                        <button
+                                            @click="restartRecording"
+                                            class="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-16 h-16 p-0 transition-colors flex items-center justify-center"
+                                        >
+                                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    <!-- Paused State - Resume, Stop, Restart -->
+                                    <div x-show="recordingState === 'paused'" class="flex items-center justify-center gap-4">
+                                        <button
+                                            @click="resumeRecording"
+                                            class="bg-green-600 hover:bg-green-700 text-white rounded-full w-16 h-16 p-0 transition-colors flex items-center justify-center"
+                                        >
+                                            <svg class="h-6 w-6" fill="currentColor" viewBox="0 0 24 24">
+                                                <path d="M8 5v14l11-7z"></path>
+                                            </svg>
+                                        </button>
+                                        <button
+                                            @click="stopRecording"
+                                            class="bg-red-600 hover:bg-red-700 text-white rounded-full w-16 h-16 p-0 transition-colors flex items-center justify-center"
+                                        >
+                                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 10h6v4H9z"></path>
+                                            </svg>
+                                        </button>
+                                        <button
+                                            @click="restartRecording"
+                                            class="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-16 h-16 p-0 transition-colors flex items-center justify-center"
+                                        >
+                                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+
+                                    <!-- Stopped State - Restart -->
+                                    <div x-show="recordingState === 'stopped'" class="flex items-center justify-center">
+                                        <button
+                                            @click="restartRecording"
+                                            class="bg-blue-600 hover:bg-blue-700 text-white rounded-full w-16 h-16 p-0 transition-colors flex items-center justify-center"
+                                        >
+                                            <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
-                        </label>
+                        </div>
+
+                        <!-- Upload Section -->
+                        <div x-show="recordingState === 'idle' && !uploadedFileName" class="text-center">
+                            <div class="text-white/60 mb-6 text-xl">or</div>
+                            <div class="relative inline-block">
+                                <input
+                                    type="file"
+                                    accept="audio/*,video/*"
+                                    @change="handleFileUpload"
+                                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                                    id="file-upload"
+                                />
+                                <label for="file-upload" class="cursor-pointer">
+                                    <div class="bg-black hover:bg-gray-900 text-white px-8 py-4 text-lg rounded-full font-semibold flex items-center gap-3 transition-colors shadow-lg min-w-[280px] justify-center">
+                                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
+                                        </svg>
+                                        Upload recording
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Start New Session Button (only for uploaded files) -->
+                        <div x-show="showResults && uploadedFileName && recordingState === 'idle'" class="text-center">
+                            <div class="text-white/60 mb-6 text-xl">or</div>
+                            <button
+                                @click="handleReset"
+                                class="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm px-8 py-4 text-lg rounded-full font-medium transition-colors min-w-[280px]"
+                            >
+                                Start New Session
+                            </button>
+                        </div>
                     </div>
 
                     <!-- Processing Button -->
@@ -111,15 +235,7 @@
                         </div>
                     </div>
 
-                    <!-- Upload New Recording Button -->
-                    <div x-show="showResults" class="mt-4">
-                        <button
-                            @click="handleReset()"
-                            class="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm px-6 py-3 rounded-full font-medium transition-colors"
-                        >
-                            Upload New Recording
-                        </button>
-                    </div>
+
 
                     <!-- Error Display -->
                     <div x-show="error" 
@@ -186,8 +302,8 @@
                 <!-- Results Section - Integrated into homepage -->
         <div x-show="showResults" x-transition class="container mx-auto px-4 pb-16" id="results-section">
             <div class="mb-16">
-                <h2 class="text-4xl font-bold text-white mb-4 text-center">Your Meeting Analysis</h2>
-                <p class="text-white/80 text-xl text-center mb-8">AI-powered insights from your recording</p>
+                <h2 class="text-4xl font-bold text-white mb-4 text-center" x-text="isLiveTranscribing ? 'Live Meeting Analysis' : 'Your Meeting Analysis'"></h2>
+                <p class="text-white/80 text-xl text-center mb-8" x-text="isLiveTranscribing ? 'Real-time AI transcription in progress' : 'AI-powered insights from your recording'"></p>
             </div>
 
             <!-- Tabs -->
@@ -203,41 +319,44 @@
                             class="flex-1 text-lg py-4 rounded-xl transition-all font-medium"
                         >
                             <span class="flex items-center justify-center gap-2">
-                                <span x-show="transcriptionReady" class="w-2 h-2 bg-green-500 rounded-full"></span>
-                                <span x-show="!transcriptionReady" class="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
-                                Complete Transcription
+                                <span x-show="transcriptionReady && !isLiveTranscribing" class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                <span x-show="isLiveTranscribing" class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                                <span x-show="!transcriptionReady && !isLiveTranscribing" class="w-2 h-2 bg-gray-400 rounded-full animate-pulse"></span>
+                                <span x-text="isLiveTranscribing ? 'Live Transcription' : 'Complete Transcription'"></span>
                             </span>
                         </button>
                         <button
-                            @click="aiAnalysisReady && (activeTab = 'summary')"
-                            :disabled="!aiAnalysisReady"
+                            @click="(aiAnalysisReady || isLiveTranscribing) && (activeTab = 'summary')"
+                            :disabled="!aiAnalysisReady && !isLiveTranscribing"
                             :class="[
                                 activeTab === 'summary' ? 'bg-white text-gray-900 shadow-sm' : 'text-white hover:bg-white/20',
-                                !aiAnalysisReady ? 'opacity-50 cursor-not-allowed' : ''
+                                !aiAnalysisReady && !isLiveTranscribing ? 'opacity-50 cursor-not-allowed' : ''
                             ]"
                             class="flex-1 text-lg py-4 rounded-xl transition-all font-medium"
                         >
                             <span class="flex items-center justify-center gap-2">
-                                <span x-show="aiAnalysisReady" class="w-2 h-2 bg-green-500 rounded-full"></span>
-                                <span x-show="!aiAnalysisReady && transcriptionReady" class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
-                                <span x-show="!aiAnalysisReady && !transcriptionReady" class="w-2 h-2 bg-gray-400 rounded-full"></span>
-                                Summary
+                                <span x-show="aiAnalysisReady && !isLiveTranscribing" class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                <span x-show="isLiveTranscribing" class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                                <span x-show="!aiAnalysisReady && transcriptionReady && !isLiveTranscribing" class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
+                                <span x-show="!aiAnalysisReady && !transcriptionReady && !isLiveTranscribing" class="w-2 h-2 bg-gray-400 rounded-full"></span>
+                                <span x-text="isLiveTranscribing ? 'Live Summary' : 'Summary'"></span>
                             </span>
                         </button>
                         <button
-                            @click="aiAnalysisReady && (activeTab = 'takeaways')"
-                            :disabled="!aiAnalysisReady"
+                            @click="(aiAnalysisReady || isLiveTranscribing) && (activeTab = 'takeaways')"
+                            :disabled="!aiAnalysisReady && !isLiveTranscribing"
                             :class="[
                                 activeTab === 'takeaways' ? 'bg-white text-gray-900 shadow-sm' : 'text-white hover:bg-white/20',
-                                !aiAnalysisReady ? 'opacity-50 cursor-not-allowed' : ''
+                                !aiAnalysisReady && !isLiveTranscribing ? 'opacity-50 cursor-not-allowed' : ''
                             ]"
                             class="flex-1 text-lg py-4 rounded-xl transition-all font-medium"
                         >
                             <span class="flex items-center justify-center gap-2">
-                                <span x-show="aiAnalysisReady" class="w-2 h-2 bg-green-500 rounded-full"></span>
-                                <span x-show="!aiAnalysisReady && transcriptionReady" class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
-                                <span x-show="!aiAnalysisReady && !transcriptionReady" class="w-2 h-2 bg-gray-400 rounded-full"></span>
-                                Key Takeaways
+                                <span x-show="aiAnalysisReady && !isLiveTranscribing" class="w-2 h-2 bg-green-500 rounded-full"></span>
+                                <span x-show="isLiveTranscribing" class="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                                <span x-show="!aiAnalysisReady && transcriptionReady && !isLiveTranscribing" class="w-2 h-2 bg-yellow-500 rounded-full animate-pulse"></span>
+                                <span x-show="!aiAnalysisReady && !transcriptionReady && !isLiveTranscribing" class="w-2 h-2 bg-gray-400 rounded-full"></span>
+                                <span x-text="isLiveTranscribing ? 'Live Takeaways' : 'Key Takeaways'"></span>
                             </span>
                         </button>
                     </div>
@@ -245,36 +364,50 @@
                 <!-- Transcription Tab -->
                 <div x-show="activeTab === 'transcription'" class="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl">
                     <div class="mb-6">
-                        <h3 class="text-2xl font-bold text-white mb-2">Full Transcription</h3>
-                        <p class="text-white/80 text-lg">Complete word-for-word transcription of your meeting</p>
+                        <h3 class="text-2xl font-bold text-white mb-2" x-text="isLiveTranscribing ? 'Live Transcription' : 'Full Transcription'"></h3>
+                        <p class="text-white/80 text-lg" x-text="isLiveTranscribing ? 'Real-time transcription of your meeting' : 'Complete word-for-word transcription of your meeting'"></p>
                     </div>
-                    <div class="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/20 font-mono text-sm leading-relaxed text-white/90 whitespace-pre-line max-h-96 overflow-y-auto" x-text="transcriptionText"></div>
+                    <div class="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/20 font-mono text-sm leading-relaxed text-white/90 whitespace-pre-line max-h-96 overflow-y-auto">
+                        <span x-text="transcriptionText || (isLiveTranscribing ? '' : 'Transcription will appear here...')"></span>
+                        <span x-show="isLiveTranscribing" class="animate-pulse">|</span>
+                    </div>
                 </div>
 
                 <!-- Summary Tab -->
                 <div x-show="activeTab === 'summary'" class="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl">
                     <div class="mb-6">
-                        <h3 class="text-2xl font-bold text-white mb-2">Meeting Summary</h3>
-                        <p class="text-white/80 text-lg">AI-generated summary of the main discussion points</p>
+                        <h3 class="text-2xl font-bold text-white mb-2" x-text="isLiveTranscribing ? 'Live Summary' : 'Meeting Summary'"></h3>
+                        <p class="text-white/80 text-lg" x-text="isLiveTranscribing ? 'AI-generated summary updating in real-time' : 'AI-generated summary of the main discussion points'"></p>
                     </div>
                     <div class="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-sm p-8 rounded-2xl border border-white/20">
-                        <p class="text-white leading-relaxed text-lg" x-text="summaryText"></p>
+                        <p class="text-white leading-relaxed text-lg text-center">
+                            <span x-text="summaryText || (isLiveTranscribing ? 'Summary will be generated as the meeting progresses...' : 'Summary will appear here...')"></span>
+                            <span x-show="isLiveTranscribing" class="animate-pulse">|</span>
+                        </p>
                     </div>
                 </div>
 
                 <!-- Takeaways Tab -->
                 <div x-show="activeTab === 'takeaways'" class="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl">
                     <div class="mb-6">
-                        <h3 class="text-2xl font-bold text-white mb-2">Key Takeaways</h3>
-                        <p class="text-white/80 text-lg">Important points and action items from the meeting</p>
+                        <h3 class="text-2xl font-bold text-white mb-2" x-text="isLiveTranscribing ? 'Live Key Takeaways' : 'Key Takeaways'"></h3>
+                        <p class="text-white/80 text-lg" x-text="isLiveTranscribing ? 'Important points identified in real-time' : 'Important points and action items from the meeting'"></p>
                     </div>
-                    <div class="space-y-6">
+                    <div class="space-y-6 max-w-3xl mx-auto">
                         <template x-for="(takeaway, index) in keyTakeaways" :key="index">
-                            <div class="flex items-start gap-4 p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
-                                <div class="w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0" x-text="index + 1"></div>
-                                <span class="text-white leading-relaxed text-lg" x-text="takeaway"></span>
+                            <div class="flex items-start gap-6 p-8 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
+                                <div class="w-10 h-10 bg-white text-blue-600 rounded-full flex items-center justify-center text-lg font-bold flex-shrink-0" x-text="index + 1"></div>
+                                <span class="text-white leading-relaxed text-xl" x-text="takeaway"></span>
                             </div>
                         </template>
+                        
+                        <!-- Empty state for takeaways -->
+                        <div x-show="keyTakeaways.length === 0" class="text-center p-8 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
+                            <div class="text-white/60 leading-relaxed text-xl">
+                                <span x-text="isLiveTranscribing ? 'Key takeaways will appear here as important points are identified...' : 'Key takeaways will appear here...'"></span>
+                                <span x-show="isLiveTranscribing" class="animate-pulse">|</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -311,9 +444,34 @@
                 transcriptionReady: false,
                 aiAnalysisReady: false,
                 
+                // Recording states
+                recordingState: 'idle', // 'idle' | 'recording' | 'paused' | 'stopped'
+                recordingTime: 0,
+                mediaRecorder: null,
+                recordedBlob: null,
+                recordingInterval: null,
+                transcriptionInterval: null,
+                recordingChunks: [],
+                
+                // Live transcription states
+                liveTranscription: '',
+                liveSummary: '',
+                liveKeyTakeaways: [],
+                isLiveTranscribing: false,
+                
+                // WebSocket connection for real-time transcription
+                websocket: null,
+                sessionId: null,
+                audioContext: null,
+                processor: null,
+                isConnected: false,
+                
                 async handleFileUpload(event) {
                     const file = event.target.files?.[0];
                     if (!file) return;
+
+                    // Reset previous results if any (but keep file input)
+                    this.resetData();
 
                     // Validate file type
                     const allowedTypes = ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/m4a', 'video/mp4'];
@@ -497,8 +655,141 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                         }
                     }, 100);
                 },
-                
-                handleReset() {
+
+                async handleStartRecording() {
+                    try {
+                        // Reset previous results if any
+                        this.resetData();
+                        
+                        // First, connect to WebSocket
+                        await this.connectWebSocket();
+                        
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        const recorder = new MediaRecorder(stream);
+                        
+                        this.recordingChunks = [];
+                        
+                        recorder.ondataavailable = (event) => {
+                            if (event.data.size > 0) {
+                                this.recordingChunks.push(event.data);
+                                // Send audio data to WebSocket for real-time transcription
+                                this.sendAudioChunk(event.data);
+                            }
+                        };
+                        
+                        recorder.onstop = () => {
+                            const blob = new Blob(this.recordingChunks, { type: 'audio/webm' });
+                            this.recordedBlob = blob;
+                            stream.getTracks().forEach(track => track.stop());
+                        };
+                        
+                        this.mediaRecorder = recorder;
+                        recorder.start(1000); // Record in 1-second chunks for real-time processing
+                        this.recordingState = 'recording';
+                        
+                        if (this.recordingTime === 0) {
+                            this.recordingTime = 0;
+                        }
+                        
+                        // Start timer
+                        this.startTimer();
+                        
+                        // Start real-time transcription
+                        this.startRealTimeTranscription();
+                        
+                    } catch (error) {
+                        console.error('Error accessing microphone:', error);
+                        this.error = 'Unable to access microphone. Please check your permissions.';
+                    }
+                },
+
+                pauseRecording() {
+                    if (this.mediaRecorder && this.recordingState === 'recording') {
+                        this.mediaRecorder.pause();
+                        this.recordingState = 'paused';
+                        this.stopTimer();
+                        
+                        // Send pause message to WebSocket
+                        if (this.websocket && this.isConnected) {
+                            this.websocket.send(JSON.stringify({
+                                type: 'pause_recording'
+                            }));
+                        }
+                    }
+                },
+
+                resumeRecording() {
+                    if (this.mediaRecorder && this.recordingState === 'paused') {
+                        this.mediaRecorder.resume();
+                        this.recordingState = 'recording';
+                        this.startTimer();
+                        
+                        // Send resume message to WebSocket
+                        if (this.websocket && this.isConnected) {
+                            this.websocket.send(JSON.stringify({
+                                type: 'resume_recording'
+                            }));
+                        }
+                    }
+                },
+
+                stopRecording() {
+                    if (this.mediaRecorder) {
+                        this.mediaRecorder.stop();
+                        this.recordingState = 'stopped';
+                        this.stopTimer();
+                        this.stopRealTimeTranscription();
+                    }
+                },
+
+                restartRecording() {
+                    if (this.mediaRecorder) {
+                        this.mediaRecorder.stop();
+                    }
+                    this.recordingTime = 0;
+                    this.recordedBlob = null;
+                    this.recordingState = 'idle';
+                    this.showResults = false;
+                    this.liveTranscription = '';
+                    this.liveSummary = '';
+                    this.liveKeyTakeaways = [];
+                    this.isLiveTranscribing = false;
+                    this.stopTimer();
+                    
+                    // Clean up WebSocket connection
+                    if (this.websocket) {
+                        this.websocket.close();
+                        this.websocket = null;
+                    }
+                    this.isConnected = false;
+                    this.sessionId = null;
+                },
+
+                startTimer() {
+                    if (this.recordingInterval) {
+                        clearInterval(this.recordingInterval);
+                    }
+                    this.recordingInterval = setInterval(() => {
+                        this.recordingTime++;
+                    }, 1000);
+                },
+
+                stopTimer() {
+                    if (this.recordingInterval) {
+                        clearInterval(this.recordingInterval);
+                        this.recordingInterval = null;
+                    }
+                },
+
+
+
+                formatTime(seconds) {
+                    const mins = Math.floor(seconds / 60);
+                    const secs = seconds % 60;
+                    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+                },
+
+                resetData() {
                     this.uploadedFileName = '';
                     this.showResults = false;
                     this.isProcessing = false;
@@ -511,9 +802,177 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                     this.transcriptionReady = false;
                     this.aiAnalysisReady = false;
                     
-                    // Reset file input
+                    // Reset recording state
+                    this.recordingState = 'idle';
+                    this.recordingTime = 0;
+                    this.recordedBlob = null;
+                    this.liveTranscription = '';
+                    this.liveSummary = '';
+                    this.liveKeyTakeaways = [];
+                    this.isLiveTranscribing = false;
+                    this.stopTimer();
+                    
+                    // Clean up WebSocket connection
+                    if (this.websocket) {
+                        this.websocket.close();
+                        this.websocket = null;
+                    }
+                    this.isConnected = false;
+                    this.sessionId = null;
+                },
+                
+                handleReset() {
+                    // Reset all data
+                    this.resetData();
+                    
+                    // Clear file input
                     const fileInput = document.getElementById('file-upload');
-                    if (fileInput) fileInput.value = '';
+                    if (fileInput) {
+                        fileInput.value = '';
+                    }
+                },
+
+                // WebSocket methods for real-time transcription
+                async connectWebSocket() {
+                    return new Promise((resolve, reject) => {
+                        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                        const wsUrl = `${protocol}//${window.location.host}/ws/recording`;
+                        
+                        this.websocket = new WebSocket(wsUrl);
+                        
+                        this.websocket.onopen = () => {
+                            console.log('WebSocket connected');
+                            this.isConnected = true;
+                            resolve();
+                        };
+                        
+                        this.websocket.onmessage = (event) => {
+                            const data = JSON.parse(event.data);
+                            this.handleWebSocketMessage(data);
+                        };
+                        
+                        this.websocket.onerror = (error) => {
+                            console.error('WebSocket error:', error);
+                            this.error = 'Connection error. Please try again.';
+                            reject(error);
+                        };
+                        
+                        this.websocket.onclose = () => {
+                            console.log('WebSocket disconnected');
+                            this.isConnected = false;
+                        };
+                    });
+                },
+
+                handleWebSocketMessage(data) {
+                    switch (data.type) {
+                        case 'ready':
+                            this.sessionId = data.sessionId;
+                            console.log('Session ready:', this.sessionId);
+                            break;
+                        
+                        case 'transcription':
+                            this.updateTranscription(data.data);
+                            break;
+                        
+                        case 'recording_started':
+                            console.log('Recording started on server');
+                            break;
+                        
+                        case 'recording_stopped':
+                            console.log('Recording stopped on server');
+                            break;
+                        
+                        case 'error':
+                            console.error('Server error:', data.message);
+                            this.error = data.message;
+                            break;
+                    }
+                },
+
+                updateTranscription(data) {
+                    // Update live transcription with new data
+                    this.liveTranscription = data.fullTranscript;
+                    this.transcriptionText = data.fullTranscript;
+                    
+                    // For now, use simple summary generation based on transcription
+                    // In a real app, this would come from the server
+                    this.liveSummary = this.generateSimpleSummary(data.fullTranscript);
+                    this.summaryText = this.liveSummary;
+                    
+                    // Generate simple key takeaways
+                    this.liveKeyTakeaways = this.generateSimpleKeyTakeaways(data.fullTranscript);
+                    this.keyTakeaways = this.liveKeyTakeaways;
+                },
+
+                generateSimpleSummary(text) {
+                    if (!text || text.trim().length < 50) {
+                        return "Recording in progress...";
+                    }
+                    
+                    const words = text.split(' ');
+                    if (words.length < 20) {
+                        return "Building summary from transcription...";
+                    }
+                    
+                    return `Live meeting in progress. Discussion covers ${words.length} words so far. Key topics being discussed based on the real-time transcription.`;
+                },
+
+                generateSimpleKeyTakeaways(text) {
+                    if (!text || text.trim().length < 50) {
+                        return ["Recording in progress..."];
+                    }
+                    
+                    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 10);
+                    return sentences.slice(0, 3).map(s => s.trim()).filter(s => s.length > 0);
+                },
+
+                sendAudioChunk(audioBlob) {
+                    if (!this.websocket || !this.isConnected) return;
+                    
+                    const reader = new FileReader();
+                    reader.onload = () => {
+                        const base64Data = reader.result.split(',')[1];
+                        this.websocket.send(JSON.stringify({
+                            type: 'audio_chunk',
+                            data: base64Data
+                        }));
+                    };
+                    reader.readAsDataURL(audioBlob);
+                },
+
+                startRealTimeTranscription() {
+                    if (!this.websocket || !this.isConnected) return;
+                    
+                    this.isLiveTranscribing = true;
+                    this.showResults = true;
+                    this.transcriptionReady = true;
+                    this.aiAnalysisReady = false;
+                    
+                    // Auto scroll to results
+                    this.scrollToResults();
+                    
+                    // Send start recording message to server
+                    this.websocket.send(JSON.stringify({
+                        type: 'start_recording'
+                    }));
+                },
+
+                stopRealTimeTranscription() {
+                    if (this.websocket && this.isConnected) {
+                        this.websocket.send(JSON.stringify({
+                            type: 'stop_recording'
+                        }));
+                    }
+                    
+                    this.isLiveTranscribing = false;
+                    this.aiAnalysisReady = true; // Mark analysis as ready when recording stops
+                    
+                    // Close WebSocket connection
+                    if (this.websocket) {
+                        this.websocket.close();
+                        this.websocket = null;
+                    }
                 }
             }
         }

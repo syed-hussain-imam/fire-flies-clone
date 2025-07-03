@@ -2,6 +2,7 @@ import Fastify from 'fastify';
 import { fileURLToPath } from 'url';
 import { dirname, join } from 'path';
 import { apiRoutes } from './routes/api.js';
+import { RecordingService } from './services/recordingService.js';
 import 'dotenv/config';
 
 const __filename = fileURLToPath(import.meta.url);
@@ -20,6 +21,9 @@ await fastify.register(import('@fastify/multipart'), {
   },
 });
 
+// Register WebSocket support
+await fastify.register(import('@fastify/websocket'));
+
 // Register static files
 await fastify.register(import('@fastify/static'), {
   root: join(__dirname, '../public'),
@@ -36,6 +40,10 @@ await fastify.register(import('@fastify/view'), {
 
 // Register API routes
 await fastify.register(apiRoutes);
+
+// Initialize and register recording service
+const recordingService = new RecordingService();
+await recordingService.setupWebSocketRoute(fastify);
 
 // Health check route
 fastify.get('/health', async (request, reply) => {

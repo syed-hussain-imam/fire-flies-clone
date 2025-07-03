@@ -1,9 +1,7 @@
 import OpenAI from 'openai';
 import { readFileSync } from 'fs';
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
+let openai: OpenAI | null = null;
 
 export interface TranscriptionResult {
   text: string;
@@ -12,7 +10,25 @@ export interface TranscriptionResult {
 }
 
 export class TranscriptionService {
+  private initializeOpenAI(): void {
+    if (!openai && process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'your_openai_api_key_here') {
+      console.log('Initializing OpenAI client...');
+      openai = new OpenAI({
+        apiKey: process.env.OPENAI_API_KEY,
+      });
+    }
+  }
+
   async transcribeAudio(audioFilePath: string): Promise<TranscriptionResult> {
+    // Initialize OpenAI client if not already done
+    this.initializeOpenAI();
+    
+    // Check if OpenAI is configured
+    if (!openai) {
+      console.log('OpenAI API Key:', process.env.OPENAI_API_KEY ? 'Present' : 'Missing');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable for cloud transcription, or use local recording with whisper.cpp instead.');
+    }
+
     try {
       const audioFile = readFileSync(audioFilePath);
       const transcription = await openai.audio.transcriptions.create({
