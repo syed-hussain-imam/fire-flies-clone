@@ -37,6 +37,11 @@ export class RecordingService {
         let assemblyAiService: AssemblyAIStreamingService | null = null;
 
         // Check if AssemblyAI API key is configured
+        console.log('Recording Service - Environment check:');
+        console.log('- NODE_ENV:', process.env.NODE_ENV);
+        console.log('- AssemblyAI API Key configured:', !!process.env.ASSEMBLYAI_API_KEY);
+        console.log('- AssemblyAI API Key length:', process.env.ASSEMBLYAI_API_KEY?.length || 0);
+
         if (!process.env.ASSEMBLYAI_API_KEY) {
           console.error(`AssemblyAI API key not configured - cannot start session: ${sessionId}`);
           connection.send(JSON.stringify({

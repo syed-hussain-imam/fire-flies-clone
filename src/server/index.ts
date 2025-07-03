@@ -8,6 +8,13 @@ import 'dotenv/config';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
+console.log('Server starting with environment:');
+console.log('- NODE_ENV:', process.env.NODE_ENV);
+console.log('- PORT:', process.env.PORT);
+console.log('- Environment variables available:', Object.keys(process.env));
+console.log('- AssemblyAI API Key configured:', !!process.env.ASSEMBLYAI_API_KEY);
+console.log('- AssemblyAI API Key length:', process.env.ASSEMBLYAI_API_KEY?.length || 0);
+
 const fastify = Fastify({
   logger: {
     level: process.env.NODE_ENV === 'production' ? 'info' : 'debug',

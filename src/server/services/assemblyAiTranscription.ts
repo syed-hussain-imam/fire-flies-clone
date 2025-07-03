@@ -23,9 +23,13 @@ export class AssemblyAITranscriptionService {
   private baseUrl = 'https://api.assemblyai.com/v2';
 
   constructor() {
+    console.log('Environment variables available:', Object.keys(process.env));
+    console.log('AssemblyAI API Key present:', !!process.env.ASSEMBLYAI_API_KEY);
+    console.log('AssemblyAI API Key length:', process.env.ASSEMBLYAI_API_KEY?.length || 0);
+    
     this.apiKey = process.env.ASSEMBLYAI_API_KEY || '';
     if (!this.apiKey) {
-      console.warn('AssemblyAI API key not configured. Set ASSEMBLYAI_API_KEY environment variable.');
+      console.error('AssemblyAI API key not configured. Set ASSEMBLYAI_API_KEY environment variable.');
     }
   }
 
