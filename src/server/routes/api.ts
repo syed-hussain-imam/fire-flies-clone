@@ -19,7 +19,7 @@ const aiService = new AIService();
 
 export async function apiRoutes(fastify: FastifyInstance) {
   // Ensure uploads directory exists
-  const uploadsDir = join(__dirname, '../../../uploads');
+  const uploadsDir = join(__dirname, '../uploads');
   if (!existsSync(uploadsDir)) {
     mkdirSync(uploadsDir, { recursive: true });
   }

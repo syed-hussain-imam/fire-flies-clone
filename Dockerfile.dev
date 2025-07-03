@@ -16,7 +16,7 @@ RUN npm install
 COPY . .
 
 # Create necessary directories
-RUN mkdir -p uploads logs
+RUN mkdir -p uploads logs data
 
 # Expose ports
 EXPOSE 3000 9229
@@ -24,7 +24,7 @@ EXPOSE 3000 9229
 # Set environment variables
 ENV NODE_ENV=development
 ENV PORT=3000
-ENV DATABASE_URL=./sqlite.db
+ENV DATABASE_URL=/app/data/sqlite.db
 ENV UPLOAD_DIR=./uploads
 
 # Start with development server and debugging

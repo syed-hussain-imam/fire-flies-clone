@@ -6,8 +6,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm ci --only=production && npm cache clean --force
+# Install ALL dependencies (including dev deps for build)
+RUN npm ci && npm cache clean --force
 
 # Copy source code
 COPY . .
@@ -46,9 +46,18 @@ COPY --from=builder --chown=fireflies:nodejs /app/src/views ./src/views
 COPY --from=builder --chown=fireflies:nodejs /app/drizzle ./drizzle
 COPY --from=builder --chown=fireflies:nodejs /app/drizzle.config.ts ./drizzle.config.ts
 
+# Copy startup script
+COPY --chown=fireflies:nodejs start.sh ./start.sh
+RUN chmod +x ./start.sh
+
 # Create necessary directories
 RUN mkdir -p uploads && chown fireflies:nodejs uploads
 RUN mkdir -p logs && chown fireflies:nodejs logs
+RUN mkdir -p temp/recordings && chown fireflies:nodejs temp
+
+# Create database directory and initialize database
+RUN mkdir -p /app/data && chown fireflies:nodejs /app/data
+RUN touch /app/data/sqlite.db && chown fireflies:nodejs /app/data/sqlite.db
 
 # Switch to non-root user
 USER fireflies
@@ -59,7 +68,7 @@ EXPOSE 3000
 # Set environment variables
 ENV NODE_ENV=production
 ENV PORT=3000
-ENV DATABASE_URL=./sqlite.db
+ENV DATABASE_URL=/app/data/sqlite.db
 ENV UPLOAD_DIR=./uploads
 
 # Health check
@@ -68,4 +77,4 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
 
 # Start application with dumb-init
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["npm", "start"] 
+CMD ["./start.sh"] 

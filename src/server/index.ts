@@ -26,16 +26,17 @@ await fastify.register(import('@fastify/websocket'));
 
 // Register static files
 await fastify.register(import('@fastify/static'), {
-  root: join(__dirname, '../public'),
+  root: join(__dirname, '../src/public'),
   prefix: '/static/',
 });
 
 // Register view engine for HTML templates
+const handlebars = await import('handlebars');
 await fastify.register(import('@fastify/view'), {
   engine: {
-    handlebars: await import('handlebars'),
+    handlebars: handlebars.default,
   },
-  root: join(__dirname, '../views'),
+  root: join(__dirname, '../src/views'),
 });
 
 // Register API routes
