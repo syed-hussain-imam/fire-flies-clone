@@ -35,7 +35,7 @@
     "fastify": "^5.4.0",
     "ffmpeg-static": "^5.2.0",
     "handlebars": "^4.7.8",
-    "node-whisper": "^2024.11.13",
+    "node-fetch": "^3.3.2",
     "openai": "^4.20.1",
     "ws": "^8.18.3"
   },
@@ -43,6 +43,7 @@
     "@types/better-sqlite3": "^7.6.8",
     "@types/multer": "^1.4.11",
     "@types/node": "^20.10.4",
+    "@types/node-fetch": "^2.6.4",
     "@types/ws": "^8.18.1",
     "@typescript-eslint/eslint-plugin": "^6.13.2",
     "@typescript-eslint/parser": "^6.13.2",

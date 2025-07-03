@@ -8,7 +8,7 @@ This project follows a "lean" architecture approach for optimal performance and 
 
 - **Backend**: Fastify + TypeScript (2x faster than Express, first-class TS support)
 - **Database**: SQLite + Drizzle ORM (Zero-config, SQL-first with great TS types)
-- **AI Services**: OpenAI Whisper (transcription) + GPT-4o (insights generation)
+- **AI Services**: OpenAI Whisper API & AssemblyAI (transcription) + GPT-4o (insights generation)
 - **Frontend**: HTML templates + htmx + Alpine.js (No runtime bundle, progressive enhancement)
 - **Styling**: Tailwind CSS standalone CLI (6KB minified output)
 - **Build**: tsup (Single compiled JS file, <200ms cold start)
@@ -107,7 +107,7 @@ The application will be available at `http://localhost:3000`
 ## 🎯 Features
 
 - **Audio Upload**: Support for multiple audio formats (MP3, WAV, M4A, etc.)
-- **Real-time Transcription**: Using OpenAI Whisper API
+- **Real-time Transcription**: Using AssemblyAI Universal-Streaming with speaker diarization
 - **AI-Powered Insights**: 
   - Meeting summaries
   - Key points extraction
@@ -134,7 +134,7 @@ UPLOAD_DIR=./uploads              # File storage directory
 The application uses three main tables:
 
 - **meetings**: Store meeting metadata and status
-- **transcriptions**: Store Whisper API transcription results  
+- **transcriptions**: Store transcription results from OpenAI Whisper API or AssemblyAI  
 - **aiNotes**: Store GPT-4o generated insights and summaries
 
 ## 🚀 Deployment

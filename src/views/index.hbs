@@ -8,6 +8,263 @@
     <link rel="stylesheet" href="/static/css/output.css">
     <script src="https://unpkg.com/htmx.org@1.9.8"></script>
     <script src="https://unpkg.com/alpinejs@3.13.3/dist/cdn.min.js" defer></script>
+    
+    <!-- Speaker Diarization Styles -->
+    <style>
+        .speaker-badge {
+            color: white;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-right: 8px;
+            display: inline-block;
+        }
+        
+        /* Speaker badge colors - Bold and solid */
+        .speaker-badge.speaker-a { background: #1E40AF; }
+        .speaker-badge.speaker-b { background: #059669; }
+        .speaker-badge.speaker-c { background: #7C3AED; }
+        .speaker-badge.speaker-d { background: #EA580C; }
+        .speaker-badge.speaker-e { background: #DB2777; }
+        .speaker-badge.speaker-f { background: #0891B2; }
+        .speaker-badge.speaker-g { background: #DC2626; }
+        .speaker-badge.speaker-h { background: #4F46E5; }
+        .speaker-badge.speaker-i { background: #047857; }
+        .speaker-badge.speaker-j { background: #D97706; }
+        .speaker-badge.speaker-k { background: #F43F5E; }
+        .speaker-badge.speaker-l { background: #0D9488; }
+        .speaker-badge.speaker-m { background: #9333EA; }
+        .speaker-badge.speaker-n { background: #B45309; }
+        .speaker-badge.speaker-o { background: #65A30D; }
+        .speaker-badge.speaker-p { background: #0284C7; }
+        
+        .speaker-segment {
+            margin-bottom: 1rem;
+            padding: 0.5rem 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .live-speaker-status {
+            font-weight: 500;
+            transition: all 0.3s ease;
+            border-radius: 8px;
+            padding: 8px 16px;
+        }
+        
+        .live-speaker-status.listening {
+            background: rgba(59, 130, 246, 0.2);
+            color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .live-speaker-status.speaking {
+            background: rgba(34, 197, 94, 0.3);
+            color: white;
+            box-shadow: 0 0 20px rgba(34, 197, 94, 0.4);
+            transform: scale(1.02);
+        }
+        
+        .partial-transcription {
+            min-height: 2rem;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Enhanced transcription display with speaker formatting */
+        .transcription-content {
+            line-height: 1.6;
+        }
+        
+        .transcription-content strong {
+            color: #60A5FA;
+            font-weight: 600;
+        }
+        
+        /* Animation for new speaker segments */
+        @keyframes speakerEntry {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .speaker-segment.new {
+            animation: speakerEntry 0.3s ease-out;
+        }
+        
+        /* Speaker block styling for formatted transcripts */
+        .speaker-block {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: 16px;
+            transition: all 0.2s ease;
+        }
+        
+        .speaker-block:hover {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: rgba(59, 130, 246, 0.3);
+        }
+        
+        .speaker-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .speaker-label::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        /* Speaker A - Bold Blue */
+        .speaker-a {
+            color: #1E40AF !important;
+        }
+        .speaker-a::before {
+            background: #1E40AF;
+        }
+        
+        /* Speaker B - Bold Green */
+        .speaker-b {
+            color: #059669 !important;
+        }
+        .speaker-b::before {
+            background: #059669;
+        }
+        
+        /* Speaker C - Bold Purple */
+        .speaker-c {
+            color: #7C3AED !important;
+        }
+        .speaker-c::before {
+            background: #7C3AED;
+        }
+        
+        /* Speaker D - Bold Orange */
+        .speaker-d {
+            color: #EA580C !important;
+        }
+        .speaker-d::before {
+            background: #EA580C;
+        }
+        
+        /* Speaker E - Bold Pink */
+        .speaker-e {
+            color: #DB2777 !important;
+        }
+        .speaker-e::before {
+            background: #DB2777;
+        }
+        
+        /* Speaker F - Bold Cyan */
+        .speaker-f {
+            color: #0891B2 !important;
+        }
+        .speaker-f::before {
+            background: #0891B2;
+        }
+        
+        /* Speaker G - Bold Red */
+        .speaker-g {
+            color: #DC2626 !important;
+        }
+        .speaker-g::before {
+            background: #DC2626;
+        }
+        
+        /* Speaker H - Bold Indigo */
+        .speaker-h {
+            color: #4F46E5 !important;
+        }
+        .speaker-h::before {
+            background: #4F46E5;
+        }
+        
+        /* Speaker I - Bold Emerald */
+        .speaker-i {
+            color: #047857 !important;
+        }
+        .speaker-i::before {
+            background: #047857;
+        }
+        
+        /* Speaker J - Bold Yellow */
+        .speaker-j {
+            color: #D97706 !important;
+        }
+        .speaker-j::before {
+            background: #D97706;
+        }
+        
+        /* Speaker K - Bold Rose */
+        .speaker-k {
+            color: #F43F5E !important;
+        }
+        .speaker-k::before {
+            background: #F43F5E;
+        }
+        
+        /* Speaker L - Bold Teal */
+        .speaker-l {
+            color: #0D9488 !important;
+        }
+        .speaker-l::before {
+            background: #0D9488;
+        }
+        
+        /* Speaker M - Bold Violet */
+        .speaker-m {
+            color: #9333EA !important;
+        }
+        .speaker-m::before {
+            background: #9333EA;
+        }
+        
+        /* Speaker N - Bold Amber */
+        .speaker-n {
+            color: #B45309 !important;
+        }
+        .speaker-n::before {
+            background: #B45309;
+        }
+        
+        /* Speaker O - Bold Lime */
+        .speaker-o {
+            color: #65A30D !important;
+        }
+        .speaker-o::before {
+            background: #65A30D;
+        }
+        
+        /* Speaker P - Bold Sky */
+        .speaker-p {
+            color: #0284C7 !important;
+        }
+        .speaker-p::before {
+            background: #0284C7;
+        }
+        
+        .speaker-text {
+            color: rgba(255, 255, 255, 0.9) !important;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            padding-left: 16px;
+        }
+    </style>
 </head>
 <body class="min-h-screen bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600" x-data="meetingApp()">
     <!-- Top notification bar -->
@@ -95,6 +352,22 @@
                                         <span x-show="recordingState === 'recording'">Live transcribing...</span>
                                         <span x-show="recordingState === 'paused'">Recording paused</span>
                                         <span x-show="recordingState === 'stopped'">Recording complete</span>
+                                    </div>
+                                </div>
+
+                                <!-- Live Speaker Status (only during recording) -->
+                                <div x-show="recordingState === 'recording' && isLiveTranscribing" class="mb-6">
+                                    <div class="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+                                        <div class="flex items-center justify-between mb-3">
+                                            <span class="text-white/80 text-sm font-medium">Live Speaker Detection</span>
+                                            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                                        </div>
+                                        <div class="live-speaker-status listening text-white text-center py-2">
+                                            Listening...
+                                        </div>
+                                        <div class="partial-transcription text-white/70 text-sm mt-3 min-h-[2rem] italic">
+                                            <!-- Partial transcription will appear here -->
+                                        </div>
                                     </div>
                                 </div>
 
@@ -364,12 +637,24 @@
                 <!-- Transcription Tab -->
                 <div x-show="activeTab === 'transcription'" class="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl">
                     <div class="mb-6">
-                        <h3 class="text-2xl font-bold text-white mb-2" x-text="isLiveTranscribing ? 'Live Transcription' : 'Full Transcription'"></h3>
-                        <p class="text-white/80 text-lg" x-text="isLiveTranscribing ? 'Real-time transcription of your meeting' : 'Complete word-for-word transcription of your meeting'"></p>
+                        <h3 class="text-2xl font-bold text-white mb-2" x-text="isLiveTranscribing ? 'Live Transcription with Speaker Detection' : 'Full Transcription'"></h3>
+                        <p class="text-white/80 text-lg" x-text="isLiveTranscribing ? 'Real-time transcription with AI speaker identification' : 'Complete word-for-word transcription of your meeting'"></p>
+                        
+                        <!-- Speaker Detection Status -->
+                        <div x-show="isLiveTranscribing" class="mt-4 flex items-center gap-2 text-sm">
+                            <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                            <span class="text-white/70">Speaker detection active</span>
+                        </div>
                     </div>
-                    <div class="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/20 font-mono text-sm leading-relaxed text-white/90 whitespace-pre-line max-h-96 overflow-y-auto">
-                        <span x-text="transcriptionText || (isLiveTranscribing ? '' : 'Transcription will appear here...')"></span>
-                        <span x-show="isLiveTranscribing" class="animate-pulse">|</span>
+                    <div class="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/20 text-sm leading-relaxed text-white/90 max-h-96 overflow-y-auto transcription-content">
+                        <div x-show="transcriptionText" x-html="transcriptionText"></div>
+                        <div x-show="!transcriptionText && !isLiveTranscribing" class="text-white/60 italic">
+                            Transcription will appear here...
+                        </div>
+                        <div x-show="!transcriptionText && isLiveTranscribing" class="text-white/60 italic">
+                            Listening for speech...
+                        </div>
+                        <span x-show="isLiveTranscribing" class="animate-pulse text-blue-300">|</span>
                     </div>
                 </div>
 
@@ -463,8 +748,11 @@
                 websocket: null,
                 sessionId: null,
                 audioContext: null,
+                audioProcessor: null,
+                audioSource: null,
                 processor: null,
                 isConnected: false,
+                waitingForReady: false,
                 
                 async handleFileUpload(event) {
                     const file = event.target.files?.[0];
@@ -480,10 +768,10 @@
                         return;
                     }
 
-                    // Validate file size (25MB limit - OpenAI Whisper requirement)
+                    // Validate file size (25MB limit - transcription service requirement)
                     const maxSize = 25 * 1024 * 1024; // 25MB
                     if (file.size > maxSize) {
-                        this.error = 'File size must be less than 25MB (OpenAI Whisper limit)';
+                        this.error = 'File size must be less than 25MB (transcription service limit)';
                         return;
                     }
 
@@ -661,7 +949,7 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                         // Reset previous results if any
                         this.resetData();
                         
-                        // First, connect to WebSocket
+                        // First, connect to WebSocket and wait for ready message
                         await this.connectWebSocket();
                         
                         const stream = await navigator.mediaDevices.getUserMedia({ 
@@ -673,17 +961,51 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                             }
                         });
                         
-                        // Use WebM format for better compatibility with whisper.cpp
-                        const recorder = new MediaRecorder(stream, {
-                            mimeType: 'audio/webm'
-                        });
+                        // Use AudioContext to get PCM16 audio for AssemblyAI Universal-Streaming
+                        this.audioContext = new AudioContext({ sampleRate: 16000 });
+                        const source = this.audioContext.createMediaStreamSource(stream);
+                        const processor = this.audioContext.createScriptProcessor(4096, 1, 1);
+                        
+                        processor.onaudioprocess = (event) => {
+                            if (this.recordingState !== 'recording') return;
+                            
+                            const inputBuffer = event.inputBuffer;
+                            const inputData = inputBuffer.getChannelData(0);
+                            
+                            // Convert Float32 to Int16 (PCM16) and then to base64
+                            const buffer = new ArrayBuffer(inputData.length * 2);
+                            const view = new DataView(buffer);
+                            for (let i = 0; i < inputData.length; i++) {
+                                const sample = Math.max(-1, Math.min(1, inputData[i]));
+                                view.setInt16(i * 2, sample * 0x7FFF, true);
+                            }
+
+                            // Convert ArrayBuffer to base64
+                            const binary = new Uint8Array(buffer).reduce(
+                                (str, byte) => str + String.fromCharCode(byte), ''
+                            );
+                            const base64Data = btoa(binary);
+                            
+                            // Send PCM16 audio chunk to WebSocket
+                            this.sendAudioChunk(base64Data);
+                        };
+                        
+                        source.connect(processor);
+                        processor.connect(this.audioContext.destination);
+
+                        // Keep a reference to the processor and source to disconnect them later
+                        this.audioProcessor = processor;
+                        this.audioSource = source;
+                        
+                        // A dummy MediaRecorder is still needed to manage stream tracks and recording state
+                        const recorder = new MediaRecorder(stream);
                         
                         this.recordingChunks = [];
                         
                         recorder.ondataavailable = (event) => {
                             if (event.data.size > 0) {
                                 this.recordingChunks.push(event.data);
-                                // Send audio data to WebSocket for real-time transcription
+                                // Send audio chunk to WebSocket for real-time transcription
                                 this.sendAudioChunk(event.data);
                             }
                         };
@@ -691,11 +1013,12 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                         recorder.onstop = () => {
                             const blob = new Blob(this.recordingChunks, { type: 'audio/webm' });
                             this.recordedBlob = blob;
+                            
                             stream.getTracks().forEach(track => track.stop());
                         };
                         
                         this.mediaRecorder = recorder;
-                        recorder.start(2000); // Record in 2-second chunks for better transcription quality
+                        recorder.start(100); // Record in small chunks for real-time transcription
                         this.recordingState = 'recording';
                         
                         if (this.recordingTime === 0) {
@@ -705,8 +1028,8 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                         // Start timer
                         this.startTimer();
                         
-                        // Start real-time transcription
-                        this.startRealTimeTranscription();
+                        // Start real-time transcription - now happens when ready message is received
+                        this.waitingForReady = true;
                         
                     } catch (error) {
                         console.error('Error accessing microphone:', error);
@@ -828,8 +1151,24 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                         this.websocket.close();
                         this.websocket = null;
                     }
+                    
+                    // Clean up AudioContext
+                    if (this.audioProcessor) {
+                        this.audioProcessor.disconnect();
+                        this.audioProcessor = null;
+                    }
+                    if (this.audioSource) {
+                        this.audioSource.disconnect();
+                        this.audioSource = null;
+                    }
+                    if (this.audioContext) {
+                        this.audioContext.close();
+                        this.audioContext = null;
+                    }
+                    
                     this.isConnected = false;
                     this.sessionId = null;
+                    this.waitingForReady = false;
                 },
                 
                 handleReset() {
@@ -882,6 +1221,12 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                         case 'ready':
                             this.sessionId = data.sessionId;
                             console.log('Session ready:', this.sessionId);
+                            
+                            // Start real-time transcription now that session is ready
+                            if (this.waitingForReady) {
+                                this.waitingForReady = false;
+                                this.startRealTimeTranscription();
+                            }
                             break;
                         
                         case 'transcription':
@@ -909,9 +1254,30 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
 
                 updateTranscription(data) {
                     // Use the complete transcript text (backend now sends complete text)
-                    const completeText = data.text || data.fullTranscript || '';
+                    const completeText = data.fullTranscript || data.text || '';
                     
-                    // Replace the entire transcription content
+                    // Check if this is a speaker-labeled transcription
+                    if (data.speaker && data.isFinal && data.text) {
+                        // This is a final speaker-labeled segment
+                        console.log(`Speaker transcription: ${data.speaker} said "${data.text}"`);
+                        
+                        // Extract speaker letter for color class
+                        const speakerLetter = data.speaker.replace('Speaker ', '').toLowerCase();
+                        const speakerClass = `speaker-${speakerLetter}`;
+                        
+                        // Add visual indicator for speaker in real-time with color
+                        const speakerBadge = `<span class="speaker-badge ${speakerClass}">${data.speaker}</span>`;
+                        const speakerText = `<div class="speaker-segment">${speakerBadge}: ${data.text}</div>`;
+                        
+                        // Show live speaker updates (you can customize this display)
+                        this.showLiveSpeakerUpdate(data.speaker, data.text);
+                    } else if (data.speaker && !data.isFinal) {
+                        // Partial transcription with speaker
+                        console.log(`Partial from ${data.speaker}: "${data.text}"`);
+                        this.showPartialSpeakerUpdate(data.speaker, data.text);
+                    }
+                    
+                    // Replace the entire transcription content with formatted text
                     this.liveTranscription = completeText;
                     this.transcriptionText = completeText;
                     
@@ -922,6 +1288,54 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                     // Generate key takeaways
                     this.liveKeyTakeaways = this.generateSimpleKeyTakeaways(completeText);
                     this.keyTakeaways = this.liveKeyTakeaways;
+                },
+
+                showLiveSpeakerUpdate(speaker, text) {
+                    // Add visual feedback for live speaker identification
+                    const statusElement = document.querySelector('.live-speaker-status');
+                    if (statusElement) {
+                        // Extract speaker letter for color class
+                        const speakerLetter = speaker.replace('Speaker ', '').toLowerCase();
+                        const speakerColorMap = {
+                            'a': '#1E40AF', 'b': '#059669', 'c': '#7C3AED', 'd': '#EA580C',
+                            'e': '#DB2777', 'f': '#0891B2', 'g': '#DC2626', 'h': '#4F46E5',
+                            'i': '#047857', 'j': '#D97706', 'k': '#F43F5E', 'l': '#0D9488',
+                            'm': '#9333EA', 'n': '#B45309', 'o': '#65A30D', 'p': '#0284C7'
+                        };
+                        
+                        const speakerColor = speakerColorMap[speakerLetter] || '#1E40AF';
+                        
+                        statusElement.innerHTML = `
+                            <div class="flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full animate-pulse" style="background-color: ${speakerColor}"></div>
+                                <span class="text-sm text-white/80">${speaker} is speaking...</span>
+                            </div>
+                        `;
+                        statusElement.className = 'live-speaker-status speaking';
+                        
+                        // Clear after a delay
+                        setTimeout(() => {
+                            statusElement.innerHTML = `
+                                <div class="flex items-center gap-2">
+                                    <div class="w-2 h-2 rounded-full animate-pulse" style="background-color: #1E40AF;"></div>
+                                    <span class="text-sm text-white/80">Listening...</span>
+                                </div>
+                            `;
+                            statusElement.className = 'live-speaker-status listening';
+                        }, 2000);
+                    }
+                },
+
+                showPartialSpeakerUpdate(speaker, text) {
+                    // Show partial transcription with speaker
+                    const partialElement = document.querySelector('.partial-transcription');
+                    if (partialElement) {
+                        // Extract speaker letter for color class
+                        const speakerLetter = speaker.replace('Speaker ', '').toLowerCase();
+                        const speakerClass = `speaker-${speakerLetter}`;
+                        
+                        partialElement.innerHTML = `<strong class="${speakerClass}">${speaker}:</strong> <em>${text}</em>`;
+                    }
                 },
 
                 generateSimpleSummary(text) {
@@ -946,25 +1360,17 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                     return sentences.slice(0, 3).map(s => s.trim()).filter(s => s.length > 0);
                 },
 
-                sendAudioChunk(audioBlob) {
+                sendAudioChunk(base64Data) {
                     if (!this.websocket || !this.isConnected) {
                         console.warn('WebSocket not connected, cannot send audio chunk');
                         return;
                     }
                     
-                    console.log('Sending audio chunk:', audioBlob.size, 'bytes');
-                    
-                    const reader = new FileReader();
-                    reader.onload = () => {
-                        const base64Data = reader.result.split(',')[1];
-                        console.log('Sending base64 audio data:', base64Data.length, 'characters');
-                        
-                        this.websocket.send(JSON.stringify({
-                            type: 'audio_chunk',
-                            data: base64Data
-                        }));
-                    };
-                    reader.readAsDataURL(audioBlob);
+                    // The data is already base64 encoded PCM from the AudioContext processor
+                    this.websocket.send(JSON.stringify({
+                        type: 'audio_chunk',
+                        data: base64Data
+                    }));
                 },
 
                 startRealTimeTranscription() {

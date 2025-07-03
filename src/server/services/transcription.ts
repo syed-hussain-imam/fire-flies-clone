@@ -1,5 +1,6 @@
 import OpenAI from 'openai';
 import { readFileSync } from 'fs';
+import { AssemblyAITranscriptionService, DiarizedTranscriptionResult } from './assemblyAiTranscription.js';
 
 let openai: OpenAI | null = null;
 
@@ -7,9 +8,23 @@ export interface TranscriptionResult {
   text: string;
   language?: string;
   confidence?: number;
+  formattedText?: string; // Text with speaker labels
+  speakers?: Array<{
+    speaker: string;
+    text: string;
+    start: number;
+    end: number;
+    confidence: number;
+  }>;
 }
 
 export class TranscriptionService {
+  private assemblyAiService: AssemblyAITranscriptionService;
+
+  constructor() {
+    this.assemblyAiService = new AssemblyAITranscriptionService();
+  }
+
   private initializeOpenAI(): void {
     if (!openai && process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'your_openai_api_key_here') {
       console.log('Initializing OpenAI client...');
@@ -26,7 +41,7 @@ export class TranscriptionService {
     // Check if OpenAI is configured
     if (!openai) {
       console.log('OpenAI API Key:', process.env.OPENAI_API_KEY ? 'Present' : 'Missing');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable for cloud transcription, or use local recording with whisper.cpp instead.');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable for cloud transcription.');
     }
 
     try {
@@ -57,6 +72,38 @@ export class TranscriptionService {
       }
       
       throw new Error('Failed to transcribe audio');
+    }
+  }
+
+  async transcribeAudioWithSpeakers(audioFilePath: string): Promise<TranscriptionResult> {
+    // Check if AssemblyAI is configured and prefer it for speaker diarization
+    if (process.env.ASSEMBLYAI_API_KEY) {
+      console.log('Using AssemblyAI for speaker diarization...');
+      try {
+        const result = await this.assemblyAiService.transcribeAudioWithSpeakers(audioFilePath);
+        return {
+          text: result.text,
+          language: result.language,
+          confidence: result.confidence,
+          formattedText: result.formattedText,
+          speakers: result.speakers,
+        };
+      } catch (error) {
+        console.error('AssemblyAI failed, falling back to OpenAI:', error);
+        // Fall back to OpenAI transcription
+        const fallbackResult = await this.transcribeAudio(audioFilePath);
+        return {
+          ...fallbackResult,
+          formattedText: fallbackResult.text, // No speaker labels
+        };
+      }
+    } else {
+      console.log('AssemblyAI not configured, using OpenAI without speaker diarization');
+      const result = await this.transcribeAudio(audioFilePath);
+      return {
+        ...result,
+        formattedText: result.text, // No speaker labels
+      };
     }
   }
 } 

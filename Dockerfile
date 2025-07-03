@@ -3,11 +3,8 @@ FROM node:20.11-alpine3.19 AS builder
 
 WORKDIR /app
 
-# Install build dependencies for whisper.cpp
+# Install any necessary build dependencies
 RUN apk update && apk add --no-cache \
-    cmake \
-    make \
-    g++ \
     git \
     && rm -rf /var/cache/apk/*
 
@@ -20,15 +17,7 @@ RUN npm ci && npm cache clean --force
 # Copy source code
 COPY . .
 
-# Build whisper.cpp
-RUN cd whisper.cpp && \
-    mkdir -p build && \
-    cd build && \
-    cmake .. && \
-    make -j$(nproc) && \
-    ls -la bin/ && \
-    find . -name "*.so*" -type f && \
-    echo "Libraries built:"
+# No local whisper.cpp building needed - using cloud services
 
 # Build TypeScript
 RUN npm run build
@@ -60,12 +49,11 @@ RUN npm ci --only=production && npm cache clean --force
 # Copy built application from builder stage
 COPY --from=builder --chown=fireflies:nodejs /app/dist ./dist
 COPY --from=builder --chown=fireflies:nodejs /app/src/public ./src/public
-COPY --from=builder --chown=fireflies:nodejs /app/src/views ./src/views
+COPY --from=builder --chown=fireflies:nodejs /app/src/views ./dist/views
 COPY --from=builder --chown=fireflies:nodejs /app/drizzle ./drizzle
 COPY --from=builder --chown=fireflies:nodejs /app/drizzle.config.ts ./drizzle.config.ts
 
-# Copy whisper.cpp build artifacts including shared libraries
-COPY --from=builder --chown=fireflies:nodejs /app/whisper.cpp/build ./whisper.cpp/build
+# No whisper.cpp artifacts needed - using cloud services
 
 # Copy startup script
 COPY --chown=fireflies:nodejs start.sh ./start.sh
@@ -92,7 +80,7 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV DATABASE_URL=/app/data/sqlite.db
 ENV UPLOAD_DIR=./uploads
-ENV LD_LIBRARY_PATH=/app/whisper.cpp/build/src:/app/whisper.cpp/build/ggml/src:/app/whisper.cpp/build:$LD_LIBRARY_PATH
+# No local whisper.cpp libraries needed
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

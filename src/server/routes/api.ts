@@ -182,7 +182,7 @@ export async function apiRoutes(fastify: FastifyInstance) {
   });
 }
 
-// Real transcription processing function (OpenAI Whisper)
+// Real transcription processing function (OpenAI Whisper API or AssemblyAI)
 async function processAudioFile(meetingId: number, filepath: string) {
   try {
     // Update status to transcribing
@@ -192,17 +192,18 @@ async function processAudioFile(meetingId: number, filepath: string) {
 
     console.log(`Starting transcription for meeting ${meetingId}, file: ${filepath}`);
 
-    // Transcribe audio using OpenAI Whisper
-    const transcriptionResult = await transcriptionService.transcribeAudio(filepath);
+    // Transcribe audio with speaker diarization (if available)
+    const transcriptionResult = await transcriptionService.transcribeAudioWithSpeakers(filepath);
     
     console.log(`Transcription completed for meeting ${meetingId}`);
 
-    // Save transcription to database
+    // Save transcription to database (use formatted text with speaker labels if available)
     await db.insert(transcriptions).values({
       meetingId,
-      text: transcriptionResult.text,
+      text: transcriptionResult.formattedText || transcriptionResult.text,
       language: transcriptionResult.language || 'en',
       confidence: transcriptionResult.confidence || 0.85,
+      speakers: transcriptionResult.speakers ? JSON.stringify(transcriptionResult.speakers) : null,
     });
 
     // Update status to transcription_complete so frontend can show transcription
@@ -249,4 +250,4 @@ async function processAudioFile(meetingId: number, filepath: string) {
   }
 }
 
-// Demo processing function removed - now using real OpenAI Whisper transcription 
+// Demo processing function removed - now using real cloud transcription services 

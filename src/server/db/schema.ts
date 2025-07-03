@@ -24,8 +24,9 @@ export const transcriptions = sqliteTable('transcriptions', {
     .notNull()
     .references(() => meetings.id, { onDelete: 'cascade' }),
   text: text('text').notNull(),
-  confidence: real('confidence'), // 0-1 confidence score from Whisper
+  confidence: real('confidence'), // 0-1 confidence score from transcription service
   language: text('language'),
+  speakers: text('speakers'), // JSON string of speaker segments
   createdAt: text('created_at')
     .notNull()
     .default(sql`CURRENT_TIMESTAMP`),

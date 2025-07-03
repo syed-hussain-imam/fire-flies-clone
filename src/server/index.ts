@@ -36,7 +36,7 @@ await fastify.register(import('@fastify/view'), {
   engine: {
     handlebars: handlebars.default,
   },
-  root: join(__dirname, '../src/views'),
+  root: join(__dirname, './views'),
 });
 
 // Register API routes
