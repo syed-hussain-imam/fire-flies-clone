@@ -46,8 +46,8 @@ RUN npm ci --only=production && npm cache clean --force
 
 # Copy built application from builder stage
 COPY --from=builder --chown=fireflies:nodejs /app/dist ./dist
-COPY --from=builder --chown=fireflies:nodejs /app/src/public ./src/public
-COPY --from=builder --chown=fireflies:nodejs /app/src/views ./src/views
+COPY --from=builder --chown=fireflies:nodejs /app/src/public ./public
+COPY --from=builder --chown=fireflies:nodejs /app/src/views ./views
 COPY --from=builder --chown=fireflies:nodejs /app/drizzle ./drizzle
 COPY --from=builder --chown=fireflies:nodejs /app/drizzle.config.ts ./drizzle.config.ts
 
@@ -60,6 +60,7 @@ RUN mkdir -p uploads && chown fireflies:nodejs uploads
 RUN mkdir -p logs && chown fireflies:nodejs logs
 RUN mkdir -p temp/recordings && chown fireflies:nodejs temp
 RUN mkdir -p models && chown fireflies:nodejs models
+RUN mkdir -p public/css && chown -R fireflies:nodejs public
 
 # Create database directory and initialize database
 RUN mkdir -p /app/data && chown fireflies:nodejs /app/data
