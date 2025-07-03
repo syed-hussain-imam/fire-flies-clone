@@ -972,21 +972,38 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                             const inputBuffer = event.inputBuffer;
                             const inputData = inputBuffer.getChannelData(0);
                             
-                            // Convert Float32 to Int16 (PCM16) and then to base64
+                            // Check if audio data contains actual sound (not just silence)
+                            let hasSound = false;
+                            for (let i = 0; i < inputData.length; i++) {
+                                if (Math.abs(inputData[i]) > 0.001) {
+                                    hasSound = true;
+                                    break;
+                                }
+                            }
+                            
+                            // Only process non-silent audio chunks
+                            if (!hasSound) {
+                                return;
+                            }
+                            
+                            // Convert Float32 to Int16 (PCM_S16LE) format
                             const buffer = new ArrayBuffer(inputData.length * 2);
                             const view = new DataView(buffer);
+                            
                             for (let i = 0; i < inputData.length; i++) {
+                                // Clamp the sample to [-1, 1] range
                                 const sample = Math.max(-1, Math.min(1, inputData[i]));
-                                view.setInt16(i * 2, sample * 0x7FFF, true);
+                                // Convert to 16-bit signed integer (PCM_S16LE)
+                                const int16Sample = Math.round(sample * 32767);
+                                // Store as little-endian 16-bit signed integer
+                                view.setInt16(i * 2, int16Sample, true);
                             }
 
-                            // Convert ArrayBuffer to base64
-                            const binary = new Uint8Array(buffer).reduce(
-                                (str, byte) => str + String.fromCharCode(byte), ''
-                            );
-                            const base64Data = btoa(binary);
+                            // Convert ArrayBuffer to base64 efficiently
+                            const uint8Array = new Uint8Array(buffer);
+                            const base64Data = btoa(String.fromCharCode.apply(null, uint8Array));
                             
-                            // Send PCM16 audio chunk to WebSocket
+                            // Send PCM_S16LE audio chunk to WebSocket
                             this.sendAudioChunk(base64Data);
                         };
                         
@@ -1005,8 +1022,8 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                         recorder.ondataavailable = (event) => {
                             if (event.data.size > 0) {
                                 this.recordingChunks.push(event.data);
-                                // Send audio chunk to WebSocket for real-time transcription
-                                this.sendAudioChunk(event.data);
+                                // Note: We don't send MediaRecorder data to WebSocket here
+                                // The AudioContext processor above already handles real-time audio streaming
                             }
                         };
                         

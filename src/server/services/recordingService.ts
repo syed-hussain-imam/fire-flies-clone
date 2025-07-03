@@ -292,7 +292,13 @@ export class RecordingService {
     try {
       // Validate base64 audio data
       if (!audioData || typeof audioData !== 'string') {
-        console.warn(`Invalid audio data for session ${session.id}`);
+        console.warn(`Invalid audio data for session ${session.id}: data is ${typeof audioData}, length: ${audioData?.length || 'undefined'}`);
+        return;
+      }
+      
+      // Additional validation for base64 format
+      if (audioData.length === 0) {
+        console.warn(`Empty audio data string for session ${session.id}`);
         return;
       }
       
@@ -303,6 +309,12 @@ export class RecordingService {
       // Validate the converted buffer
       if (!audioBuffer || audioBuffer.length === 0) {
         console.warn(`Empty audio buffer for session ${session.id}, skipping`);
+        return;
+      }
+      
+      // Additional validation for PCM_S16LE format (should be even number of bytes)
+      if (audioBuffer.length % 2 !== 0) {
+        console.warn(`Invalid PCM_S16LE audio buffer for session ${session.id}: length ${audioBuffer.length} is not even`);
         return;
       }
       

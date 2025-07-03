@@ -41,7 +41,11 @@ export class AssemblyAIStreamingService extends EventEmitter {
     }
 
     try {
-      const response = await fetch('https://streaming.assemblyai.com/v3/token', {
+      // Add expires_in_seconds query parameter (default to 300 seconds = 5 minutes)
+      const expiresInSeconds = 300;
+      const url = `https://streaming.assemblyai.com/v3/token?expires_in_seconds=${expiresInSeconds}`;
+      
+      const response = await fetch(url, {
         method: 'GET',
         headers: {
           'Authorization': this.apiKey,
