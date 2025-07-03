@@ -2,46 +2,56 @@
 
 An AI-powered meeting transcription and note-taking service built with modern, lean technologies.
 
+🌐 **Live Demo**: [https://fire-flies-clone-production.up.railway.app/](https://fire-flies-clone-production.up.railway.app/)
+
 ## 🚀 Tech Stack
 
 This project follows a "lean" architecture approach for optimal performance and maintainability:
 
-- **Backend**: Fastify + TypeScript (2x faster than Express, first-class TS support)
-- **Database**: SQLite + Drizzle ORM (Zero-config, SQL-first with great TS types)
-- **AI Services**: OpenAI API (transcription) + GPT-4o (insights generation)
-- **Frontend**: HTML templates + htmx + Alpine.js (No runtime bundle, progressive enhancement)
+- **Backend**: Fastify + TypeScript (Prefered Setup)
+- **Database**: SQLite + Drizzle ORM (Light-weight and capable)
+- **AI Services**: AssemblyAI + OpenAI (speech -> text transcription + insights generation)
+- **Frontend**: HTML templates + htmx + Alpine.js (keeping it fast and keeping it light)
 - **Styling**: Tailwind CSS standalone CLI (6KB minified output)
 - **Build**: tsup (Single compiled JS file, <200ms cold start)
+- **Deployment**: Railway.app (Production hosting)
 
 ## 📁 Project Structure
 
 ```
 fire-flies-clone/
+├── data/                         # Data storage directory
 ├── src/
 │   ├── server/
-│   │   ├── index.ts              # Main Fastify server
+│   │   ├── index.ts             # Main Fastify server
 │   │   ├── db/
-│   │   │   ├── schema.ts         # Drizzle database schema
-│   │   │   ├── index.ts          # Database connection
-│   │   │   └── migrate.ts        # Migration runner
+│   │   │   ├── schema.ts        # Drizzle database schema
+│   │   │   ├── index.ts         # Database connection
+│   │   │   └── migrate.ts       # Migration runner
 │   │   ├── services/
-│   │   │   ├── transcription.ts  # OpenAI API integration
-│   │   │   └── ai.ts             # GPT-4o analysis service
-│   │   └── routes/
-│   │       └── api.ts            # API endpoints
+│   │   │   ├── ai.ts            # AI service integration
+│   │   │   ├── assemblyAiStreaming.ts    # Real-time transcription
+│   │   │   ├── assemblyAiTranscription.ts # AssemblyAI integration
+│   │   │   ├── recordingService.ts        # Audio recording handling
+│   │   │   └── transcription.ts           # Transcription service
+│   │   ├── routes/
+│   │   │   └── api.ts           # API endpoints
+│   │   └── uploads/             # Server-side upload storage
 │   ├── public/
 │   │   └── css/
-│   │       ├── input.css         # Tailwind input
-│   │       └── output.css        # Generated CSS (created on build)
+│   │       └── input.css        # Tailwind input styles
+│   ├── uploads/                 # Public upload directory
 │   └── views/
-│       └── index.hbs             # Main HTML template
-├── drizzle/                      # Database migrations (auto-generated)
-├── uploads/                      # Audio file storage (created at runtime)
-├── package.json
-├── tsconfig.json
-├── tailwind.config.js
-├── drizzle.config.ts
-└── sqlite.db                     # SQLite database (created on first run)
+│       └── index.hbs           # Main HTML template
+├── drizzle/                    # Database migrations (auto-generated)
+├── docker-compose.yml         # Docker compose configuration
+├── Dockerfile                 # Production Docker configuration
+├── Dockerfile.dev            # Development Docker configuration
+├── drizzle.config.ts        # Drizzle ORM configuration
+├── package.json             # Project dependencies and scripts
+├── tsconfig.json           # TypeScript configuration
+├── tailwind.config.js     # Tailwind CSS configuration
+└── start.sh              # Startup script
 ```
 
 ## 🛠 Setup Instructions
@@ -50,13 +60,15 @@ fire-flies-clone/
 
 - Node.js 18+ 
 - npm or yarn
-- OpenAI API key
+- AssemblyAI API key (for speech transcription)
+- OpenAI API key (for AI insights)
+- Docker and Docker Compose (optional, for containerized setup)
 
-### Installation
+### Local Installation
 
 1. **Clone and install dependencies:**
    ```bash
-   git clone <your-repo-url>
+   git clone https://github.com/yourusername/fire-flies-clone.git
    cd fire-flies-clone
    npm install
    ```
@@ -64,7 +76,15 @@ fire-flies-clone/
 2. **Set up environment variables:**
    ```bash
    cp .env.example .env
-   # Edit .env and add your OpenAI API key
+   ```
+   Configure the following in your `.env` file:
+   ```bash
+   PORT=3000
+   NODE_ENV=development
+   ASSEMBLY_AI_API_KEY=your_assembly_ai_key
+   OPENAI_API_KEY=your_openai_key
+   MAX_FILE_SIZE=25MB
+   UPLOAD_DIR=./uploads
    ```
 
 3. **Set up the database:**
@@ -75,39 +95,70 @@ fire-flies-clone/
 
 4. **Build CSS:**
    ```bash
-   npm run css:build
+   npm run css:build   # Build CSS once
+   # or
+   npm run css:watch   # Watch for CSS changes
    ```
 
-5. **Start development server:**
+### Docker Setup (Recommended)
+
+1. **Configure environment:**
    ```bash
-   npm run dev
+   cp .env.example .env
+   # Edit .env with your API keys and configuration
    ```
 
-The application will be available at `http://localhost:3000`
+2. **Start with Docker Compose:**
+   
+   For development:
+   ```bash
+   docker-compose -f docker-compose.yml up --build
+   ```
+   
+   For production:
+   ```bash
+   docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build
+   ```
 
-## 📝 Usage
+3. **Access the application:**
+   - Development: http://localhost:3000
+   - Production: http://localhost:80
 
-### Development
+### Running the Application
 
-- `npm run dev` - Start development server with hot reload
-- `npm run css:watch` - Watch and rebuild CSS on changes
-- `npm run db:studio` - Open Drizzle Studio for database management
+#### Development Mode
 
-### Production
+```bash
+# Start the development server with hot reload
+npm run dev
 
-- `npm run build` - Build for production
-- `npm start` - Start production server
+# Watch for CSS changes
+npm run css:watch
+```
+
+#### Production Mode
+
+```bash
+# Build the application
+npm run build
+
+# Build CSS
+npm run css:build
+
+# Start the production server
+npm start
+```
 
 ### Database Management
 
-- `npm run db:generate` - Generate new migration files after schema changes
+- `npm run db:generate` - Generate new migration files
 - `npm run db:migrate` - Apply pending migrations
-- `npm run db:studio` - Visual database explorer
+- `npm run db:studio` - Open Drizzle Studio for database management
 
 ## 🎯 Features
 
 - **Audio Upload**: Support for multiple audio formats (MP3, WAV, M4A, etc.)
-- **Real-time Transcription**: Using OpenAI API
+- **Real-time Transcription**: Using AssemblyAI
 - **AI-Powered Insights**: 
   - Meeting summaries
   - Key points extraction
@@ -140,6 +191,11 @@ The application uses three main tables:
 ## 🚀 Deployment
 
 This application is designed for easy deployment on modern platforms:
+
+### Production Deployment
+
+The application is currently deployed on Railway.app and accessible at:
+[https://fire-flies-clone-production.up.railway.app/](https://fire-flies-clone-production.up.railway.app/)
 
 ### 🐳 Docker (Recommended)
 
