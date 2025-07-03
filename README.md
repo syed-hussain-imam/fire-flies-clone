@@ -159,11 +159,12 @@ npm start
 
 - **Audio Upload**: Support for multiple audio formats (MP3, WAV, M4A, etc.)
 - **Real-time Transcription**: Using AssemblyAI
-- **AI-Powered Insights**: 
+- **AI-Powered Insights**:
   - Meeting summaries
   - Key points extraction
   - Action items identification
   - Participant recognition
+  *Note: For live recordings, summaries and takeaways will be available only after the recording has been stopped.*
 - **Modern UI**: Responsive design with htmx for dynamic interactions
 - **Fast Performance**: <200ms cold start, optimized for speed
 - **Language Optimization**: Currently optimized for English language processing.
