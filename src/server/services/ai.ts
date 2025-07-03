@@ -31,22 +31,41 @@ export class AIService {
 
     try {
       const prompt = `
-        Analyze the following meeting transcription and provide:
-        1. A concise summary (2-3 sentences)
-        2. Key points discussed (bullet points)
-        3. Action items with owners if mentioned
-        4. Participants mentioned by name
+        Analyze the following meeting transcription and extract meaningful insights. Focus on creating professional, actionable analysis suitable for business use.
 
         Transcription:
         ${transcription}
 
-        Please respond in JSON format with the structure:
+        Please provide:
+
+        1. **SUMMARY**: Create a concise, professional summary (2-4 sentences) that captures the main purpose, key topics discussed, and overall outcomes of the meeting. Focus on what was accomplished and decided.
+
+        2. **KEY TAKEAWAYS**: Extract 3-6 specific, actionable key points that represent the most important insights, decisions, or information shared. Each point should be clear, standalone, and valuable for someone who wasn't present.
+
+        3. **ACTION ITEMS**: Identify specific tasks, follow-ups, or next steps mentioned in the discussion. Include responsible parties if mentioned, deadlines if specified, and the context for each action.
+
+        4. **PARTICIPANTS**: List any individuals mentioned by name, role, or title in the conversation. Include speakers if identified (e.g., "Speaker A", "Speaker B") and any other people referenced.
+
+        Format your response as valid JSON with this exact structure:
         {
-          "summary": "...",
-          "keyPoints": ["...", "..."],
-          "actionItems": ["...", "..."],
-          "participants": ["...", "..."]
+          "summary": "Professional summary focusing on main outcomes and decisions...",
+          "keyPoints": [
+            "Specific actionable insight or decision from the meeting...",
+            "Another key point that provides value to stakeholders...",
+            "Important information or conclusion reached..."
+          ],
+          "actionItems": [
+            "Specific task or follow-up with context and owner if mentioned...",
+            "Next step or deadline identified in the discussion..."
+          ],
+          "participants": [
+            "Person Name or Role",
+            "Speaker A",
+            "Another Participant"
+          ]
         }
+
+        Ensure all content is professional, accurate to the transcription, and provides real business value.
       `;
 
       const completion = await openai.chat.completions.create({
@@ -54,7 +73,7 @@ export class AIService {
         messages: [
           {
             role: 'system',
-            content: 'You are an AI assistant specialized in analyzing meeting transcriptions and extracting actionable insights. Always respond with valid JSON.',
+            content: 'You are an expert meeting analyst specialized in extracting high-quality, actionable business insights from transcriptions. You excel at identifying key decisions, important information, and meaningful takeaways that provide real value to stakeholders. Your analysis should be professional, accurate, and focused on outcomes that matter for business operations. Always respond with valid JSON in the exact format requested.',
           },
           {
             role: 'user',

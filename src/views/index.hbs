@@ -1407,7 +1407,7 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                     }));
                 },
 
-                stopRealTimeTranscription() {
+                async stopRealTimeTranscription() {
                     if (this.websocket && this.isConnected) {
                         this.websocket.send(JSON.stringify({
                             type: 'stop_recording'
@@ -1415,13 +1415,67 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                     }
                     
                     this.isLiveTranscribing = false;
-                    this.aiAnalysisReady = true; // Mark analysis as ready when recording stops
                     
                     // Close WebSocket connection
                     if (this.websocket) {
                         this.websocket.close();
                         this.websocket = null;
                     }
+                    
+                    // Process the live transcript with AI analysis
+                    await this.analyzeLiveTranscript();
+                },
+
+                async analyzeLiveTranscript() {
+                    if (!this.liveTranscription || this.liveTranscription.trim().length < 50) {
+                        // If transcript is too short, just use simple analysis
+                        this.aiAnalysisReady = true;
+                        return;
+                    }
+
+                    try {
+                        console.log('Starting AI analysis for live transcript...');
+                        
+                        // Strip HTML tags from transcript for AI analysis
+                        const plainTextTranscript = this.liveTranscription.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+                        
+                        const response = await fetch('/api/analyze-live-transcript', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify({
+                                transcript: plainTextTranscript
+                            })
+                        });
+
+                        if (!response.ok) {
+                            throw new Error(`Analysis failed: ${response.statusText}`);
+                        }
+
+                        const insights = await response.json();
+                        
+                        // Update with AI-generated insights
+                        this.liveSummary = insights.summary;
+                        this.summaryText = insights.summary;
+                        
+                        this.liveKeyTakeaways = insights.keyTakeaways || [];
+                        this.keyTakeaways = insights.keyTakeaways || [];
+                        
+                        console.log('AI analysis completed for live transcript');
+                        
+                    } catch (error) {
+                        console.error('Failed to analyze live transcript:', error);
+                        
+                        // Fallback to simple analysis if AI fails
+                        this.liveSummary = this.generateSimpleSummary(this.liveTranscription);
+                        this.summaryText = this.liveSummary;
+                        
+                        this.liveKeyTakeaways = this.generateSimpleKeyTakeaways(this.liveTranscription);
+                        this.keyTakeaways = this.liveKeyTakeaways;
+                    }
+                    
+                    this.aiAnalysisReady = true; // Mark analysis as ready
                 }
             }
         }

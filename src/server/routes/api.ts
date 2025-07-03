@@ -180,6 +180,38 @@ export async function apiRoutes(fastify: FastifyInstance) {
       return reply.code(500).send('<p class="text-red-500">Failed to load meeting details</p>');
     }
   });
+
+  // New endpoint for analyzing live recording transcripts
+  fastify.post('/api/analyze-live-transcript', async (request: FastifyRequest, reply: FastifyReply) => {
+    try {
+      const { transcript } = request.body as { transcript: string };
+      
+      if (!transcript || transcript.trim().length < 50) {
+        return reply.code(400).send({ error: 'Transcript too short for analysis' });
+      }
+
+      console.log('Starting AI analysis for live transcript...');
+      
+      // Use the same AI service as uploaded files
+      const insights = await aiService.generateMeetingInsights(transcript);
+      
+      console.log('Live transcript AI analysis completed');
+      
+      return reply.send({
+        summary: insights.summary,
+        keyTakeaways: insights.keyPoints,
+        actionItems: insights.actionItems,
+        participants: insights.participants
+      });
+      
+    } catch (error) {
+      console.error('Live transcript analysis error:', error);
+      return reply.code(500).send({ 
+        error: 'Failed to analyze transcript',
+        details: error instanceof Error ? error.message : String(error)
+      });
+    }
+  });
 }
 
 // Real transcription processing function (OpenAI API)
