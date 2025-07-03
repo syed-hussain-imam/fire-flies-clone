@@ -26,7 +26,9 @@ RUN cd whisper.cpp && \
     cd build && \
     cmake .. && \
     make -j$(nproc) && \
-    ls -la bin/
+    ls -la bin/ && \
+    find . -name "*.so*" -type f && \
+    echo "Libraries built:"
 
 # Build TypeScript
 RUN npm run build
@@ -62,8 +64,8 @@ COPY --from=builder --chown=fireflies:nodejs /app/src/views ./src/views
 COPY --from=builder --chown=fireflies:nodejs /app/drizzle ./drizzle
 COPY --from=builder --chown=fireflies:nodejs /app/drizzle.config.ts ./drizzle.config.ts
 
-# Copy whisper.cpp build artifacts
-COPY --from=builder --chown=fireflies:nodejs /app/whisper.cpp/build/bin ./whisper.cpp/build/bin
+# Copy whisper.cpp build artifacts including shared libraries
+COPY --from=builder --chown=fireflies:nodejs /app/whisper.cpp/build ./whisper.cpp/build
 
 # Copy startup script
 COPY --chown=fireflies:nodejs start.sh ./start.sh
@@ -90,6 +92,7 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV DATABASE_URL=/app/data/sqlite.db
 ENV UPLOAD_DIR=./uploads
+ENV LD_LIBRARY_PATH=/app/whisper.cpp/build/src:/app/whisper.cpp/build/ggml/src:/app/whisper.cpp/build:$LD_LIBRARY_PATH
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
