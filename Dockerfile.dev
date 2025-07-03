@@ -4,8 +4,12 @@ FROM node:20-alpine
 WORKDIR /app
 
 # Update packages and install dumb-init for proper signal handling
+# Also install build dependencies for whisper.cpp
 RUN apk update && apk upgrade && apk add --no-cache \
     dumb-init \
+    cmake \
+    make \
+    g++ \
     git \
     && rm -rf /var/cache/apk/*
 
@@ -18,7 +22,13 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# No local whisper.cpp building needed - using cloud services
+# Build whisper.cpp
+RUN cd whisper.cpp && \
+    mkdir -p build && \
+    cd build && \
+    cmake .. && \
+    make -j$(nproc) && \
+    ls -la bin/
 
 # Create necessary directories
 RUN mkdir -p uploads logs data models temp

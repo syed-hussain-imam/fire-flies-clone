@@ -41,7 +41,7 @@ export class TranscriptionService {
     // Check if OpenAI is configured
     if (!openai) {
       console.log('OpenAI API Key:', process.env.OPENAI_API_KEY ? 'Present' : 'Missing');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable for cloud transcription.');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable for cloud transcription, or use local recording with whisper.cpp instead.');
     }
 
     try {
