@@ -11,6 +11,11 @@ At the outset of this project, the primary goal was to simulate the core functio
 
 Initially, I decided to focus on processing recorded MP3 files, as it seemed a simpler starting point to grasp the fundamental concepts. My raw plan for the first working prototype was straightforward: utilize OpenAI's Whisper API for transcribing the audio, and then feed the resulting transcription into GPT-4o for generating summaries and action items.
 
+Key AI-tooling used:
+v0.dev (fast UI prototyping)
+ChatGPT
+Cursor
+
 Here's a diagram illustrating this initial prototype architecture:
 
 ```mermaid
@@ -114,6 +119,13 @@ Each speaker gets their own visually distinct block with:
 🔵 Speaker E: Let's address those concerns one by one.
 🔵 Speaker F: I can provide additional context on that.
 ```
+
+## Possible Improvments:
+
+Possible improvements would be:
+1) To be able to interact with all historical meetings and retrieve action items or insights from a large timeline of meetings 
+
+2) MCP server being fed important documents and new meeting meta-data to allow fireflies LLM to readily aid the user in between meetings
 
 ## Setup Options
 
