@@ -41,7 +41,7 @@ export class TranscriptionService {
     // Check if OpenAI is configured
     if (!openai) {
       console.log('OpenAI API Key:', process.env.OPENAI_API_KEY ? 'Present' : 'Missing');
-      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable for cloud transcription, or use local recording with whisper.cpp instead.');
+      throw new Error('OpenAI API key not configured. Please set OPENAI_API_KEY environment variable for cloud transcription.');
     }
 
     try {
@@ -55,7 +55,7 @@ export class TranscriptionService {
       return {
         text: transcription.text,
         language: transcription.language,
-        // Whisper doesn't provide confidence scores in the API response
+        // OpenAI API doesn't provide confidence scores in the response
         // but we can estimate based on the response format
         confidence: 0.85, // placeholder
       };
@@ -64,7 +64,7 @@ export class TranscriptionService {
       
       // Handle specific OpenAI errors with better messages
       if (error?.status === 413) {
-        throw new Error('File too large. OpenAI Whisper supports files up to 25MB. Please compress your audio file and try again.');
+        throw new Error('File too large. OpenAI API supports files up to 25MB. Please compress your audio file and try again.');
       } else if (error?.status === 415) {
         throw new Error('Unsupported file format. Please use MP3, WAV, M4A, or MP4 format.');
       } else if (error?.status === 401) {

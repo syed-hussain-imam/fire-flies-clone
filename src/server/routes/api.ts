@@ -182,7 +182,7 @@ export async function apiRoutes(fastify: FastifyInstance) {
   });
 }
 
-// Real transcription processing function (OpenAI Whisper)
+// Real transcription processing function (OpenAI API)
 async function processAudioFile(meetingId: number, filepath: string) {
   try {
     // Update status to transcribing
@@ -250,4 +250,4 @@ async function processAudioFile(meetingId: number, filepath: string) {
   }
 }
 
-// Demo processing function removed - now using real OpenAI Whisper transcription 
+    // Demo processing function removed - now using real OpenAI API transcription 

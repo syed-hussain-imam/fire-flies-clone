@@ -81,7 +81,7 @@ AssemblyAI provides excellent speaker diarization with high accuracy and is the 
 
 ### Option 2: OpenAI Only (Fallback)
 
-If AssemblyAI is not configured, the system will fall back to OpenAI Whisper without speaker diarization.
+If AssemblyAI is not configured, the system will fall back to OpenAI API without speaker diarization.
 
 ## Speaker Detection Capabilities
 
@@ -194,7 +194,7 @@ The system now supports live speaker diarization during real-time recording sess
 ### 3. Fallback Mechanism
 
 If AssemblyAI is not available or configured:
-- System falls back to OpenAI Whisper
+- System falls back to OpenAI API
 - Provides regular transcription without speaker labels
 - No functionality is lost
 

@@ -3,11 +3,8 @@ FROM node:20.11-alpine3.19 AS builder
 
 WORKDIR /app
 
-# Install build dependencies for whisper.cpp
+# Install minimal build dependencies
 RUN apk update && apk add --no-cache \
-    cmake \
-    make \
-    g++ \
     git \
     && rm -rf /var/cache/apk/*
 
@@ -19,16 +16,6 @@ RUN npm ci && npm cache clean --force
 
 # Copy source code
 COPY . .
-
-# Build whisper.cpp
-RUN cd whisper.cpp && \
-    mkdir -p build && \
-    cd build && \
-    cmake .. && \
-    make -j$(nproc) && \
-    ls -la bin/ && \
-    find . -name "*.so*" -type f && \
-    echo "Libraries built:"
 
 # Build TypeScript
 RUN npm run build
@@ -45,7 +32,7 @@ FROM node:20.11-alpine3.19 AS production
 WORKDIR /app
 
 # Update packages and install dumb-init for proper signal handling
-RUN apk update && apk upgrade && apk add --no-cache dumb-init libgomp && rm -rf /var/cache/apk/*
+RUN apk update && apk upgrade && apk add --no-cache dumb-init && rm -rf /var/cache/apk/*
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
@@ -63,9 +50,6 @@ COPY --from=builder --chown=fireflies:nodejs /app/src/public ./src/public
 COPY --from=builder --chown=fireflies:nodejs /app/src/views ./src/views
 COPY --from=builder --chown=fireflies:nodejs /app/drizzle ./drizzle
 COPY --from=builder --chown=fireflies:nodejs /app/drizzle.config.ts ./drizzle.config.ts
-
-# Copy whisper.cpp build artifacts including shared libraries
-COPY --from=builder --chown=fireflies:nodejs /app/whisper.cpp/build ./whisper.cpp/build
 
 # Copy startup script
 COPY --chown=fireflies:nodejs start.sh ./start.sh
@@ -92,7 +76,6 @@ ENV NODE_ENV=production
 ENV PORT=3000
 ENV DATABASE_URL=/app/data/sqlite.db
 ENV UPLOAD_DIR=./uploads
-ENV LD_LIBRARY_PATH=/app/whisper.cpp/build/src:/app/whisper.cpp/build/ggml/src:/app/whisper.cpp/build:$LD_LIBRARY_PATH
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \

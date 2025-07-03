@@ -768,10 +768,10 @@
                         return;
                     }
 
-                    // Validate file size (25MB limit - OpenAI Whisper requirement)
+                    // Validate file size (25MB limit - OpenAI API requirement)
                     const maxSize = 25 * 1024 * 1024; // 25MB
                     if (file.size > maxSize) {
-                        this.error = 'File size must be less than 25MB (OpenAI Whisper limit)';
+                        this.error = 'File size must be less than 25MB (OpenAI API limit)';
                         return;
                     }
 
