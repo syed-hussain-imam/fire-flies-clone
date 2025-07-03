@@ -233,12 +233,18 @@ async function processAudioFile(meetingId: number, filepath: string) {
 
     console.log(`Processing completed for meeting ${meetingId}`);
 
-  } catch (error) {
+  } catch (error: any) {
     console.error('Processing error:', error);
     
-    // Update status to failed
+    // Store error message in description field for user feedback
+    const errorMessage = error?.message || 'Unknown processing error occurred';
+    
+    // Update status to failed with error details
     await db.update(meetings)
-      .set({ status: 'failed' })
+      .set({ 
+        status: 'failed',
+        description: errorMessage
+      })
       .where(eq(meetings.id, meetingId));
   }
 }

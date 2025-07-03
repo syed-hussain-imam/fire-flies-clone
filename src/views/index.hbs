@@ -58,6 +58,9 @@
                         Upload your meeting recordings and get instant AI-powered transcriptions, summaries, and insights.
                         Transform conversations into actionable intelligence.
                     </p>
+                    <p class="text-white/60 text-sm mb-6">
+                        Supports MP3, WAV, M4A, MP4 formats • Maximum 25MB file size
+                    </p>
 
                     <div class="relative inline-block">
                         <input
@@ -310,10 +313,10 @@
                         return;
                     }
 
-                    // Validate file size (50MB limit)
-                    const maxSize = 50 * 1024 * 1024; // 50MB
+                    // Validate file size (25MB limit - OpenAI Whisper requirement)
+                    const maxSize = 25 * 1024 * 1024; // 25MB
                     if (file.size > maxSize) {
-                        this.error = 'File size must be less than 50MB';
+                        this.error = 'File size must be less than 25MB (OpenAI Whisper limit)';
                         return;
                     }
 
@@ -370,8 +373,8 @@
                             await this.loadPartialResults(data);
                             setTimeout(() => this.pollForResults(), 2000); // Poll faster for AI completion
                         } else if (data.meeting.status === 'failed') {
-                            // Processing failed
-                            this.error = 'Processing failed. Please try uploading again.';
+                            // Processing failed - show specific error message if available
+                            this.error = data.meeting.description || 'Processing failed. Please try uploading again.';
                             this.isProcessing = false;
                         } else {
                             // Still processing (uploading, transcribing), poll again
