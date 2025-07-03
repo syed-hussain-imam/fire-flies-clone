@@ -45,7 +45,7 @@ FROM node:20.11-alpine3.19 AS production
 WORKDIR /app
 
 # Update packages and install dumb-init for proper signal handling
-RUN apk update && apk upgrade && apk add --no-cache dumb-init && rm -rf /var/cache/apk/*
+RUN apk update && apk upgrade && apk add --no-cache dumb-init libgomp && rm -rf /var/cache/apk/*
 
 # Create non-root user
 RUN addgroup -g 1001 -S nodejs && \
