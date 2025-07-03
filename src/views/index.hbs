@@ -34,19 +34,36 @@
     <!-- Header -->
     <header class="relative z-10">
         <div class="container mx-auto px-4 py-6">
-            <div class="flex items-center space-x-2">
-                <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                </svg>
-                <span class="text-2xl font-bold text-white">MeetingAI</span>
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                    </svg>
+                    <span class="text-2xl font-bold text-white">MeetingAI</span>
+                </div>
+                <nav class="hidden md:flex items-center space-x-8 text-white">
+                    <a href="#" class="hover:text-white/80 font-medium">Personal</a>
+                    <a href="#" class="hover:text-white/80 font-medium">Business</a>
+                    <a href="#" class="hover:text-white/80 font-medium">Enterprise</a>
+                    <a href="#" class="hover:text-white/80 font-medium">Pricing</a>
+                    <div class="flex items-center gap-2 bg-white/10 backdrop-blur-sm rounded-full px-4 py-2 border border-white/20">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9v-9m0-9v9"></path>
+                        </svg>
+                        <span>English</span>
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </nav>
             </div>
         </div>
     </header>
 
     <main class="relative">
-        <!-- Initial Upload Screen -->
-        <div x-show="!showResults && !isProcessing" class="container mx-auto px-4 py-16">
-            <div class="grid lg:grid-cols-2 gap-12 items-center min-h-[70vh]">
+        <!-- Hero Section - Always Visible -->
+        <div class="container mx-auto px-4 py-16">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
                 <div class="text-white">
                     <h1 class="text-5xl md:text-6xl lg:text-7xl font-bold mb-8 leading-tight">
                         CHANGE THE WAY YOU
@@ -58,11 +75,9 @@
                         Upload your meeting recordings and get instant AI-powered transcriptions, summaries, and insights.
                         Transform conversations into actionable intelligence.
                     </p>
-                    <p class="text-white/60 text-sm mb-6">
-                        Supports MP3, WAV, M4A, MP4 formats • Maximum 25MB file size
-                    </p>
 
-                    <div class="relative inline-block">
+                    <!-- Upload Button - Always Visible -->
+                    <div x-show="!isProcessing" class="relative inline-block">
                         <input
                             type="file"
                             accept="audio/*,video/*"
@@ -78,6 +93,32 @@
                                 Upload recording
                             </div>
                         </label>
+                    </div>
+
+                    <!-- Processing Button -->
+                    <div x-show="isProcessing" class="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                        <div class="flex items-center gap-4">
+                            <svg class="h-8 w-8 animate-spin text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                            </svg>
+                            <div>
+                                <div class="text-white font-semibold">Processing...</div>
+                                <div class="text-white/80 text-sm" x-text="uploadedFileName"></div>
+                            </div>
+                        </div>
+                        <div class="w-full bg-white/20 rounded-full h-2 mt-4">
+                            <div class="bg-white h-2 rounded-full animate-pulse transition-all duration-1000" style="width: 75%"></div>
+                        </div>
+                    </div>
+
+                    <!-- Upload New Recording Button -->
+                    <div x-show="showResults" class="mt-4">
+                        <button
+                            @click="handleReset()"
+                            class="bg-white/10 hover:bg-white/20 text-white border border-white/20 backdrop-blur-sm px-6 py-3 rounded-full font-medium transition-colors"
+                        >
+                            Upload New Recording
+                        </button>
                     </div>
 
                     <!-- Error Display -->
@@ -102,6 +143,11 @@
                             </div>
                         </div>
                     </div>
+
+                    <!-- File size info -->
+                    <p class="text-white/60 text-sm mt-4">
+                        Supports MP3, WAV, M4A, MP4 formats • Maximum 25MB file size
+                    </p>
                 </div>
 
                 <div class="relative">
@@ -109,10 +155,10 @@
                         <div class="space-y-6">
                             <div class="flex items-center justify-between">
                                 <span class="text-white/80 text-lg">Meeting Analysis</span>
-                                <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+                                <div :class="showResults ? 'bg-green-400' : 'bg-blue-400 animate-pulse'" class="w-3 h-3 rounded-full"></div>
                             </div>
 
-                            <div class="text-4xl font-bold text-white">Ready to process</div>
+                            <div class="text-4xl font-bold text-white" x-text="showResults ? 'Analysis Complete' : 'Ready to process'"></div>
 
                             <div class="bg-white/10 rounded-2xl p-4 border border-white/20">
                                 <div class="text-white/80 text-sm mb-2">Features</div>
@@ -137,50 +183,24 @@
             </div>
         </div>
 
-        <!-- Processing Screen -->
-        <div x-show="isProcessing" class="container mx-auto px-4 py-16">
-            <div class="max-w-2xl mx-auto text-center">
-                <div class="bg-white/10 backdrop-blur-lg rounded-3xl p-12 border border-white/20 shadow-2xl">
-                    <svg class="h-16 w-16 animate-spin text-white mx-auto mb-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
-                    </svg>
-                    <h2 class="text-3xl font-bold text-white mb-6">Processing Your Recording</h2>
-                    <p class="text-white/80 mb-6 text-lg">
-                        Analyzing: <span class="font-semibold text-white" x-text="uploadedFileName"></span>
-                    </p>
-                    <div class="w-full bg-white/20 rounded-full h-3 mb-6">
-                        <div class="bg-white h-3 rounded-full animate-pulse transition-all duration-1000" style="width: 75%"></div>
-                    </div>
-                    <p class="text-white/60">AI is transcribing and analyzing your meeting content...</p>
-                </div>
+                <!-- Results Section - Integrated into homepage -->
+        <div x-show="showResults" x-transition class="container mx-auto px-4 pb-16" id="results-section">
+            <div class="mb-16">
+                <h2 class="text-4xl font-bold text-white mb-4 text-center">Your Meeting Analysis</h2>
+                <p class="text-white/80 text-xl text-center mb-8">AI-powered insights from your recording</p>
             </div>
-        </div>
 
-        <!-- Results Screen -->
-        <div x-show="showResults" class="bg-white min-h-screen">
-            <div class="container mx-auto px-4 py-12">
-                <div class="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 class="text-4xl font-bold text-gray-900 mb-2">Meeting Analysis Complete</h1>
-                        <p class="text-gray-600 text-lg">File: <span x-text="uploadedFileName"></span></p>
-                    </div>
-                    <button @click="handleReset()" class="bg-blue-600 hover:bg-blue-700 text-white rounded-full px-6 py-3 font-medium transition-colors">
-                        Upload New Recording
-                    </button>
-                </div>
-
-                <!-- Tabs with Real-time Loading -->
+            <!-- Tabs -->
                 <div class="w-full">
-                    <div class="flex w-full bg-gray-100 rounded-2xl p-1 mb-8">
-                        <button 
+                    <div class="flex w-full mb-8 bg-white/10 backdrop-blur-lg p-2 rounded-2xl border border-white/20 gap-2">
+                        <button
                             @click="transcriptionReady && (activeTab = 'transcription')"
                             :disabled="!transcriptionReady"
                             :class="[
-                                activeTab === 'transcription' ? 'bg-white shadow-sm' : 'hover:bg-gray-200',
-                                !transcriptionReady ? 'opacity-50 cursor-not-allowed' : '',
-                                transcriptionReady ? 'text-green-600' : ''
+                                activeTab === 'transcription' ? 'bg-white text-gray-900 shadow-sm' : 'text-white hover:bg-white/20',
+                                !transcriptionReady ? 'opacity-50 cursor-not-allowed' : ''
                             ]"
-                            class="flex-1 text-lg py-4 rounded-xl transition-colors relative"
+                            class="flex-1 text-lg py-4 rounded-xl transition-all font-medium"
                         >
                             <span class="flex items-center justify-center gap-2">
                                 <span x-show="transcriptionReady" class="w-2 h-2 bg-green-500 rounded-full"></span>
@@ -188,15 +208,14 @@
                                 Complete Transcription
                             </span>
                         </button>
-                        <button 
+                        <button
                             @click="aiAnalysisReady && (activeTab = 'summary')"
                             :disabled="!aiAnalysisReady"
                             :class="[
-                                activeTab === 'summary' ? 'bg-white shadow-sm' : 'hover:bg-gray-200',
-                                !aiAnalysisReady ? 'opacity-50 cursor-not-allowed' : '',
-                                aiAnalysisReady ? 'text-green-600' : ''
+                                activeTab === 'summary' ? 'bg-white text-gray-900 shadow-sm' : 'text-white hover:bg-white/20',
+                                !aiAnalysisReady ? 'opacity-50 cursor-not-allowed' : ''
                             ]"
-                            class="flex-1 text-lg py-4 rounded-xl transition-colors relative"
+                            class="flex-1 text-lg py-4 rounded-xl transition-all font-medium"
                         >
                             <span class="flex items-center justify-center gap-2">
                                 <span x-show="aiAnalysisReady" class="w-2 h-2 bg-green-500 rounded-full"></span>
@@ -205,15 +224,14 @@
                                 Summary
                             </span>
                         </button>
-                        <button 
+                        <button
                             @click="aiAnalysisReady && (activeTab = 'takeaways')"
                             :disabled="!aiAnalysisReady"
                             :class="[
-                                activeTab === 'takeaways' ? 'bg-white shadow-sm' : 'hover:bg-gray-200',
-                                !aiAnalysisReady ? 'opacity-50 cursor-not-allowed' : '',
-                                aiAnalysisReady ? 'text-green-600' : ''
+                                activeTab === 'takeaways' ? 'bg-white text-gray-900 shadow-sm' : 'text-white hover:bg-white/20',
+                                !aiAnalysisReady ? 'opacity-50 cursor-not-allowed' : ''
                             ]"
-                            class="flex-1 text-lg py-4 rounded-xl transition-colors relative"
+                            class="flex-1 text-lg py-4 rounded-xl transition-all font-medium"
                         >
                             <span class="flex items-center justify-center gap-2">
                                 <span x-show="aiAnalysisReady" class="w-2 h-2 bg-green-500 rounded-full"></span>
@@ -224,48 +242,39 @@
                         </button>
                     </div>
 
-                    <!-- Transcription Tab -->
-                    <div x-show="activeTab === 'transcription'" class="border-0 shadow-lg rounded-2xl bg-white">
-                        <div class="p-6 border-b">
-                            <h3 class="text-2xl font-semibold">Full Transcription</h3>
-                            <p class="text-gray-600 text-lg mt-1">Complete word-for-word transcription of your meeting</p>
-                        </div>
-                        <div class="p-6">
-                            <div class="bg-gray-50 p-8 rounded-2xl font-mono text-sm leading-relaxed whitespace-pre-line border" x-text="transcriptionText">
-                            </div>
-                        </div>
+                <!-- Transcription Tab -->
+                <div x-show="activeTab === 'transcription'" class="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl">
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-bold text-white mb-2">Full Transcription</h3>
+                        <p class="text-white/80 text-lg">Complete word-for-word transcription of your meeting</p>
                     </div>
+                    <div class="bg-white/10 backdrop-blur-sm p-6 rounded-2xl border border-white/20 font-mono text-sm leading-relaxed text-white/90 whitespace-pre-line max-h-96 overflow-y-auto" x-text="transcriptionText"></div>
+                </div>
 
-                    <!-- Summary Tab -->
-                    <div x-show="activeTab === 'summary'" class="border-0 shadow-lg rounded-2xl bg-white">
-                        <div class="p-6 border-b">
-                            <h3 class="text-2xl font-semibold">Meeting Summary</h3>
-                            <p class="text-gray-600 text-lg mt-1">AI-generated summary of the main discussion points</p>
-                        </div>
-                        <div class="p-6">
-                            <div class="bg-gradient-to-r from-blue-50 to-indigo-50 p-8 rounded-2xl border border-blue-100">
-                                <p class="text-gray-800 leading-relaxed text-lg" x-text="summaryText"></p>
-                            </div>
-                        </div>
+                <!-- Summary Tab -->
+                <div x-show="activeTab === 'summary'" class="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl">
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-bold text-white mb-2">Meeting Summary</h3>
+                        <p class="text-white/80 text-lg">AI-generated summary of the main discussion points</p>
                     </div>
+                    <div class="bg-gradient-to-r from-white/10 to-white/5 backdrop-blur-sm p-8 rounded-2xl border border-white/20">
+                        <p class="text-white leading-relaxed text-lg" x-text="summaryText"></p>
+                    </div>
+                </div>
 
-                    <!-- Takeaways Tab -->
-                    <div x-show="activeTab === 'takeaways'" class="border-0 shadow-lg rounded-2xl bg-white">
-                        <div class="p-6 border-b">
-                            <h3 class="text-2xl font-semibold">Key Takeaways</h3>
-                            <p class="text-gray-600 text-lg mt-1">Important points and action items from the meeting</p>
-                        </div>
-                        <div class="p-6">
-                            <div class="space-y-6">
-                                <template x-for="(takeaway, index) in keyTakeaways" :key="index">
-                                    <div class="flex items-start gap-4 p-4 bg-gray-50 rounded-xl border">
-                                        <div class="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold flex-shrink-0" x-text="index + 1">
-                                        </div>
-                                        <span class="text-gray-800 leading-relaxed text-lg" x-text="takeaway"></span>
-                                    </div>
-                                </template>
+                <!-- Takeaways Tab -->
+                <div x-show="activeTab === 'takeaways'" class="bg-white/10 backdrop-blur-lg rounded-3xl p-8 border border-white/20 shadow-2xl">
+                    <div class="mb-6">
+                        <h3 class="text-2xl font-bold text-white mb-2">Key Takeaways</h3>
+                        <p class="text-white/80 text-lg">Important points and action items from the meeting</p>
+                    </div>
+                    <div class="space-y-6">
+                        <template x-for="(takeaway, index) in keyTakeaways" :key="index">
+                            <div class="flex items-start gap-4 p-6 bg-white/10 backdrop-blur-sm rounded-2xl border border-white/20">
+                                <div class="w-8 h-8 bg-white text-blue-600 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0" x-text="index + 1"></div>
+                                <span class="text-white leading-relaxed text-lg" x-text="takeaway"></span>
                             </div>
-                        </div>
+                        </template>
                     </div>
                 </div>
             </div>
@@ -273,7 +282,7 @@
     </main>
 
     <!-- Footer -->
-    <footer x-show="!showResults" class="bg-black text-white py-6 mt-auto">
+    <footer class="bg-black text-white py-6 mt-auto">
         <div class="container mx-auto px-4 flex items-center justify-between">
             <div class="flex items-center space-x-2">
                 <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -401,6 +410,9 @@
                     
                     // Set default tab to transcription since it's ready
                     this.activeTab = 'transcription';
+                    
+                    // Auto scroll to results section
+                    this.scrollToResults();
                 },
 
                 async loadMeetingResults() {
@@ -430,6 +442,9 @@
                         this.transcriptionReady = true;
                         this.aiAnalysisReady = true; // Everything is ready now
 
+                        // Auto scroll to results section
+                        this.scrollToResults();
+
                     } catch (error) {
                         console.error('Load results error:', error);
                         // Fallback to demo data if real data fails
@@ -438,6 +453,9 @@
                         this.showResults = true;
                         this.transcriptionReady = true;
                         this.aiAnalysisReady = true;
+                        
+                        // Auto scroll to results section
+                        this.scrollToResults();
                     }
                 },
 
@@ -465,6 +483,19 @@ Speaker 1: Great progress. Let's discuss our action items for Q4. We need to foc
                         "Q4 focus areas: market expansion and product feature improvements",
                         "Action items based on customer feedback to be prioritized"
                     ];
+                },
+                
+                scrollToResults() {
+                    // Small delay to ensure DOM is updated and element is visible
+                    setTimeout(() => {
+                        const resultsSection = document.getElementById('results-section');
+                        if (resultsSection) {
+                            resultsSection.scrollIntoView({ 
+                                behavior: 'smooth', 
+                                block: 'start' 
+                            });
+                        }
+                    }, 100);
                 },
                 
                 handleReset() {
